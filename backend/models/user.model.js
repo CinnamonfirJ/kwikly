@@ -41,7 +41,7 @@ const UserSchema = new mongoose.Schema({
   },
   rank: {
     type: String,
-    default: "Egg Head",
+    default: "🥚 Egghead",
   },
   favouriteTopic: {
     type: String,

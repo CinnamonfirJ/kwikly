@@ -19,7 +19,7 @@ export function middleware(request: NextRequest) {
   );
 
   // Get the user cookie
-  const userCookie = request.cookies.get("user");
+  const userCookie = request.cookies.get("jwt");
   const isAuthenticated = !!userCookie;
 
   // If the route is protected and the user is not authenticated, redirect to login

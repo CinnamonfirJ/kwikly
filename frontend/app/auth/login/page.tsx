@@ -8,19 +8,20 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, LogIn, BookOpen } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
+// import { useMutation } from "@tanstack/react-query";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  const { login, isAuthenticated } = useAuthContext();
+  const { login, error, isAuthenticated, isError, isPending } =
+    useAuthContext();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
+  const callbackUrl =
+    searchParams?.get("callbackUrl") || "/dashboard/:username";
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -31,28 +32,10 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
 
-    if (!email || !password) {
-      setError("Please fill in all fields");
-      return;
-    }
+    const formData = { email, password };
 
-    setIsLoading(true);
-
-    try {
-      const success = await login(email, password);
-
-      if (success) {
-        router.push(callbackUrl);
-      } else {
-        setError("Invalid email or password");
-      }
-    } catch (err) {
-      setError(err.message || "Login failed. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    login(formData);
   };
 
   return (
@@ -74,9 +57,9 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {error && (
+          {isError && (
             <div className='bg-red-50 mb-6 p-4 border border-red-200 rounded-lg text-red-600'>
-              {error}
+              {error?.message}
             </div>
           )}
 
@@ -152,10 +135,10 @@ export default function LoginPage() {
 
             <button
               type='submit'
-              disabled={isLoading}
+              disabled={isPending}
               className='flex justify-center items-center bg-pink-500 hover:bg-pink-600 disabled:opacity-70 px-4 py-3 rounded-lg w-full font-medium text-white transition-colors disabled:cursor-not-allowed'
             >
-              {isLoading ? (
+              {isPending ? (
                 <span className='flex items-center'>
                   <svg
                     className='mr-2 -ml-1 w-4 h-4 text-white animate-spin'
@@ -190,7 +173,7 @@ export default function LoginPage() {
 
           <div className='mt-8 text-center'>
             <p className='text-gray-600'>
-              Don't have an account?{" "}
+              Don&#39;t have an account?{" "}
               <Link
                 href='/auth/signup'
                 className='font-medium text-pink-500 hover:text-pink-600'

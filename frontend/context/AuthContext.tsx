@@ -1,54 +1,157 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  isPending: boolean;
+  isError: boolean;
+  error: Error | null;
+  login: (credentials: { email: string; password: string }) => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
-  isLoading: true,
-  login: async () => false,
+  isPending: true,
+  isError: false,
+  error: null,
+  login: async () => {},
   logout: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, setIsPending] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const queryClient = useQueryClient();
+
+  const getUser = async () => {
+    try {
+      const res = await fetch("/api/auth/user");
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Couldn't get User");
+      }
+      setIsAuthenticated(true);
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const { data: getUserQuery } = useQuery({
+    queryKey: ["authUser"],
+    queryFn: getUser,
+  });
 
   useEffect(() => {
-    const storedUser = Cookies.get("user");
+    const storedUser = getUserQuery;
 
     if (storedUser) {
       setIsAuthenticated(true);
     }
-    setIsLoading(false);
-  }, []);
+    setIsPending(false);
+  }, [getUserQuery]);
 
-  const login = async (email: string, password: string) => {
-    if (email === "test@gmail.com" && password === "123") {
-      Cookies.set("user", "true", { expires: 0.5 });
-      setIsAuthenticated(true);
-      return true;
+  const logoutFn = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Couldn't get User");
+      }
+      router.push("/");
+      setIsAuthenticated(false);
+
+      return data;
+    } catch (error) {
+      throw error;
     }
-    return false;
+  };
+
+  const { mutate: LogoutMutate } = useMutation({
+    mutationFn: logoutFn,
+    onMutate: () => setIsPending(true),
+    onError: (error: Error) => {
+      setIsError(true);
+      setError(error);
+      setIsPending(false);
+    },
+    onSuccess: () => {
+      setIsPending(false);
+      console.log("Logout Successful", isAuthenticated);
+    },
+  });
+
+  const loginFn = async (credentials: { email: string; password: string }) => {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      setError(null);
+      setIsAuthenticated(true);
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const { mutate: LoginMutate } = useMutation({
+    mutationFn: loginFn,
+    onMutate: () => setIsPending(true),
+    onError: (error: Error) => {
+      setIsError(true);
+      setError(error);
+      setIsPending(false);
+    },
+    onSuccess: () => {
+      setIsPending(false);
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      console.log("Login Successful", isAuthenticated);
+    },
+  });
+
+  const login = (credentials: { email: string; password: string }) => {
+    LoginMutate(credentials);
   };
 
   const logout = () => {
-    Cookies.remove("user");
-    router.push("/");
-    setIsAuthenticated(false);
+    LogoutMutate();
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        isPending,
+        login,
+        logout,
+        isError,
+        error,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
