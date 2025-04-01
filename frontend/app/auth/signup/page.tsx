@@ -2,65 +2,58 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Eye, EyeOff, UserPlus, BookOpen } from "lucide-react";
+import { useAuthContext } from "@/context/AuthContext";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function SignupPage() {
-  const [username, setUserName] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [internalError, setinternalError] = useState("");
+
+  const { signup, error, isError, isPending, isAuthenticated } =
+    useAuthContext();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl =
+    searchParams?.get("callbackUrl") || "/dashboard/:username";
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push(callbackUrl);
+    }
+  }, [isAuthenticated, router, callbackUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-
-    if (!username || !email || !password || !confirmPassword) {
-      setError("Please fill in all fields");
-      return;
-    }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setinternalError("Passwords do not match");
       return;
     }
 
     if (!agreeTerms) {
-      setError("Please agree to the Terms of Service and Privacy Policy");
+      setinternalError(
+        "Please agree to the Terms of Service and Privacy Policy"
+      );
       return;
     }
 
-    setIsLoading(true);
+    const formData = {
+      name,
+      email,
+      password,
+    };
 
-    try {
-      // In a real app, you would call your authentication API here
-      // const response = await fetch('/api/auth/signup', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ name, email, password })
-      // })
-
-      // if (!response.ok) {
-      //   const data = await response.json()
-      //   throw new Error(data.message || 'Signup failed')
-      // }
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Redirect to dashboard after successful signup
-      window.location.href = "/dashboard";
-    } catch (err) {
-      setError(err.message || "Signup failed. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    signup(formData);
   };
 
   // Password strength checker
@@ -144,9 +137,14 @@ export default function SignupPage() {
             </p>
           </div>
 
-          {error && (
+          {internalError && (
             <div className='bg-red-50 mb-6 p-4 border border-red-200 rounded-lg text-red-600'>
-              {error}
+              {internalError}
+            </div>
+          )}
+          {isError && (
+            <div className='bg-red-50 mb-6 p-4 border border-red-200 rounded-lg text-red-600'>
+              {error?.message}
             </div>
           )}
 
@@ -161,8 +159,8 @@ export default function SignupPage() {
               <input
                 id='name'
                 type='text'
-                value={username}
-                onChange={(e) => setUserName(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className='px-4 py-3 border border-gray-300 focus:border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 w-full'
                 placeholder='Enter your full name'
                 required
@@ -298,10 +296,10 @@ export default function SignupPage() {
 
             <button
               type='submit'
-              disabled={isLoading}
+              disabled={isPending}
               className='flex justify-center items-center bg-pink-500 hover:bg-pink-600 disabled:opacity-70 px-4 py-3 rounded-lg w-full font-medium text-white transition-colors disabled:cursor-not-allowed'
             >
-              {isLoading ? (
+              {isPending ? (
                 <span className='flex items-center'>
                   <svg
                     className='mr-2 -ml-1 w-4 h-4 text-white animate-spin'

@@ -21,6 +21,23 @@ export const getAllQuizzes = async (req, res) => {
   }
 };
 
+export const getAllQuizzesWithSecret = async (req, res) => {
+  try {
+    const quizzes = await Quiz.find().sort({ createdAt: -1 }).populate({
+      path: "createdBy",
+      select: "-password",
+    }); // Populate creator details
+
+    res.status(200).json({
+      message: "All public quizzes retrieved successfully!",
+      quizzes,
+    });
+  } catch (error) {
+    console.error("Error in Get All Quizzes Controller:", error.message);
+    res.status(500).json({ message: "Internal Server Error!" });
+  }
+};
+
 export const getQuizById = async (req, res) => {
   const { quizId } = req.params;
 
@@ -226,6 +243,47 @@ export const deleteQuiz = async (req, res) => {
     res.status(200).json({ message: "Quiz deleted successfully!" });
   } catch (error) {
     console.error("Error in Delete Quiz Controller:", error.message);
+    res.status(500).json({ message: "Internal Server Error!" });
+  }
+};
+
+// Update Quiz isPublic Controller
+export const updateQuizIsPublic = async (req, res) => {
+  const { quizId } = req.params;
+  const userId = req.user._id;
+  const { isPublic } = req.body;
+
+  try {
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) {
+      return res.status(404).json({ message: "Quiz not found!" });
+    }
+
+    // Ensure only the creator can update the quiz's public status
+    if (quiz.createdBy.toString() !== userId.toString()) {
+      return res
+        .status(403)
+        .json({ message: "Unauthorized to update this quiz!" });
+    }
+
+    // Validate that isPublic is a boolean value
+    if (typeof isPublic !== "boolean") {
+      return res
+        .status(400)
+        .json({ message: "isPublic must be a boolean value!" });
+    }
+
+    quiz.isPublic = isPublic;
+    quiz.updatedAt = Date.now();
+
+    await quiz.save();
+
+    res.status(200).json({
+      message: "Quiz visibility updated successfully!",
+      quiz,
+    });
+  } catch (error) {
+    console.error("Error in Update Quiz isPublic Controller:", error.message);
     res.status(500).json({ message: "Internal Server Error!" });
   }
 };

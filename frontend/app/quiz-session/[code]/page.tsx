@@ -4,195 +4,59 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { use } from "react";
-import {
-  ChevronLeft,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Award,
-  BookOpen,
-  Trophy,
-  User,
-} from "lucide-react";
+import { ChevronLeft, Clock, CheckCircle, XCircle } from "lucide-react";
 import Image from "next/image";
+import { useQuery } from "@tanstack/react-query";
+import { useRank } from "@/context/RankContext";
 
 // This would normally come from your MongoDB database
 // For demo purposes, we're using static data
 
-const user = {
-  id: "user123",
-  name: "Sarah Johnson",
-  level: 5,
-  xp: 340,
-  xpToNextLevel: 500,
-  completedQuizzes: 12,
-  profilePicture: "/images/placeholder.png?height=100&width=100",
-};
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  profilePicture: string;
+  rank: string;
+  level: number;
+  xp: number;
+  // quizResults: any[]; // Replace with a proper type if needed
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  favouriteTopic: string;
+}
 
-const quizzes = [
-  {
-    id: 1,
-    code: "STAT101",
-    title: "Statistics Fundamentals Quiz",
-    instruction:
-      "Answer the following questions based on the concepts covered in the Statistics course.",
-    passingScore: 70,
-    maxScore: 100,
-    xpReward: 50,
-    subject: "Mathematics",
-    topic: "Statistics",
-    duration: "30 minutes",
-    createdBy: "user123",
-    creatorName: "Sarah Johnson",
-    isPublic: true,
-    questions: [
-      {
-        id: 1,
-        questionText:
-          "What is the mean of the following data set: 5, 10, 15, 20, 25?",
-        options: ["10", "15", "20", "25"],
-        correctAnswer: "15",
-        points: 25,
-      },
-      {
-        id: 2,
-        questionText:
-          "Which measure of central tendency is most affected by extreme values?",
-        options: ["Mean", "Median", "Mode", "Range"],
-        correctAnswer: "Mean",
-        points: 25,
-      },
-      {
-        id: 3,
-        questionText:
-          "What is the median of the following data set: 3, 8, 2, 10, 7?",
-        options: ["2", "3", "7", "8"],
-        correctAnswer: "7",
-        points: 25,
-      },
-      {
-        id: 4,
-        questionText: "Which of the following is NOT a measure of dispersion?",
-        options: ["Range", "Variance", "Standard Deviation", "Median"],
-        correctAnswer: "Median",
-        points: 25,
-      },
-    ],
-  },
-  {
-    id: 2,
-    code: "PROB202",
-    title: "Probability Quiz",
-    instruction:
-      "Answer the following questions based on the concepts covered in the Probability course.",
-    passingScore: 60,
-    maxScore: 100,
-    xpReward: 40,
-    subject: "Mathematics",
-    topic: "Probability",
-    duration: "2 minutes",
-    createdBy: "user123",
-    creatorName: "Sarah Johnson",
-    isPublic: false,
-    questions: [
-      {
-        id: 1,
-        questionText:
-          "What is the probability of getting a head when flipping a fair coin?",
-        options: ["0", "1/4", "1/2", "1"],
-        correctAnswer: "1/2",
-        points: 20,
-      },
-      {
-        id: 2,
-        questionText:
-          "A bag contains 4 red balls and 6 blue balls. What is the probability of randomly drawing a red ball?",
-        options: ["2/5", "3/5", "4/10", "6/10"],
-        correctAnswer: "2/5",
-        points: 20,
-      },
-      {
-        id: 3,
-        questionText:
-          "What is the probability of rolling a 3 on a fair six-sided die?",
-        options: ["1/6", "1/3", "1/2", "2/3"],
-        correctAnswer: "1/6",
-        points: 20,
-      },
-      {
-        id: 4,
-        questionText:
-          "If two dice are rolled, what is the probability of getting a sum of 7?",
-        options: ["1/6", "1/12", "1/36", "1/2"],
-        correctAnswer: "1/6",
-        points: 20,
-      },
-      {
-        id: 5,
-        questionText:
-          "A box contains 3 red, 5 green, and 2 blue marbles. If one marble is drawn at random, what is the probability that it is green?",
-        options: ["1/5", "1/2", "3/10", "5/10"],
-        correctAnswer: "1/2",
-        points: 20,
-      },
-    ],
-  },
-  {
-    id: 3,
-    code: "ENG303",
-    title: "Proper Nouns Quiz",
-    instruction:
-      "Answer the following questions about proper nouns and their usage.",
-    passingScore: 80,
-    maxScore: 100,
-    xpReward: 45,
-    subject: "English",
-    topic: "Proper Nouns",
-    duration: "20 minutes",
-    createdBy: "user456",
-    creatorName: "Michael Brown",
-    isPublic: true,
-    questions: [
-      {
-        id: 1,
-        questionText: "Which of the following is a proper noun?",
-        options: ["city", "Paris", "building", "river"],
-        correctAnswer: "Paris",
-        points: 25,
-      },
-      {
-        id: 2,
-        questionText: "Proper nouns should always be:",
-        options: ["Capitalized", "Lowercase", "Italicized", "Underlined"],
-        correctAnswer: "Capitalized",
-        points: 25,
-      },
-      {
-        id: 3,
-        questionText: "Which of the following is NOT a proper noun?",
-        options: ["Monday", "January", "Summer", "season"],
-        correctAnswer: "season",
-        points: 25,
-      },
-      {
-        id: 4,
-        questionText:
-          "In the phrase 'the Pacific Ocean', which word is NOT a proper noun?",
-        options: ["the", "Pacific", "Ocean", "Both 'the' and 'Ocean'"],
-        correctAnswer: "the",
-        points: 25,
-      },
-    ],
-  },
-];
+interface Question {
+  _id: string;
+  id: number;
+  questionText: string;
+  options: string[];
+  correctAnswer: string;
+  points: number;
+}
 
-// Helper function to find a quiz by code
-const findQuizByCode = (code: string) => {
-  return quizzes.find((quiz) => quiz.code === code);
-};
+interface Quiz {
+  _id: string;
+  title: string;
+  instruction: string;
+  passingScore: number;
+  maxScore: number;
+  xpReward: number;
+  subject: string;
+  topic: string;
+  duration: string;
+  code: string;
+  createdBy: User;
+  isPublic: boolean;
+  questions: Question[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
 
 // Helper function to calculate total points
-const calculateTotalPoints = (quiz) => {
+const calculateTotalPoints = (quiz: Quiz) => {
   return (
     quiz?.questions.reduce((total, question) => total + question.points, 0) || 0
   );
@@ -232,11 +96,36 @@ export default function QuizSession({
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [score, setScore] = useState(0);
 
+  const { updateXPAndRank } = useRank();
+
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+
+  const { data: quizData } = useQuery({
+    queryKey: ["quiz"],
+    queryFn: async () => {
+      const res = await fetch("/api/quiz/test");
+      const data = await res.json();
+      console.log("New Quiz ", data.quizzes);
+      return data.quizzes;
+    },
+  });
+
+  useEffect(() => {
+    if (quizData) {
+      setQuizzes(quizData);
+    }
+  }, [quizData]);
+
+  // Helper function to find a quiz by code
+  const findQuizByCode = (code: string) => {
+    return quizzes.find((quiz) => quiz.code === code);
+  };
+
   const quiz = findQuizByCode(code);
   const questions = quiz?.questions || [];
 
   // Check if current user is the creator
-  const isCreator = quiz?.createdBy === user.id;
+  const isCreator = quiz?.createdBy.name === quiz?.createdBy.name;
 
   // Set initial time based on quiz duration
   const [timeLeft, setTimeLeft] = useState(() => {
@@ -310,11 +199,35 @@ export default function QuizSession({
     const maxPossiblePoints = calculateTotalPoints(quiz);
     const percentage = Math.round((totalPoints / maxPossiblePoints) * 100);
     setScore(percentage);
+
+    // Debugging logs
+    console.log("Percentage:", percentage);
+    console.log("Passing Score:", quiz.passingScore);
+    console.log("XP Reward:", quiz.xpReward);
+
+    if (percentage >= quiz.passingScore) {
+      // Use `percentage` instead of `score`
+      console.log("User passed. Awarding full XP:", quiz.xpReward);
+      updateXPAndRank(quiz.xpReward);
+    } else {
+      const calculatedScore = Math.floor(quiz.xpReward * 0.25);
+      console.log("User failed. Awarding partial XP:", calculatedScore);
+      updateXPAndRank(calculatedScore);
+    }
+
     setQuizCompleted(true);
 
     // In a real app, you would save the quiz results to the database here
     // and update the user's XP if they passed
   };
+
+  const getInitials = (name: string) =>
+    name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
 
   // If quiz not found
   if (!quiz) {
@@ -323,7 +236,7 @@ export default function QuizSession({
         <div className='text-center'>
           <h2 className='mb-4 font-bold text-2xl'>Quiz Not Found</h2>
           <p className='mb-6 text-gray-500'>
-            The quiz with code "{code}" could not be found.
+            The quiz with code &#34;{code}&#34; could not be found.
           </p>
           <Link
             href='/quizzes'
@@ -483,23 +396,38 @@ export default function QuizSession({
                 <h3 className='mb-2 font-bold text-lg'>Quiz Creator</h3>
                 <div className='flex items-center gap-3'>
                   <div className='relative border-4 border-pink-100 rounded-full w-16 h-16 overflow-hidden'>
-                    <Image
-                      src={user.profilePicture || "/placeholder.svg"}
-                      alt={user.name}
+                    {/* <Image
+                      src={quiz.createdBy.profilePicture || "/placeholder.svg"}
+                      alt={quiz.createdBy.name}
                       fill
                       className='object-cover'
-                    />
+                    /> */}
+                    {quiz.createdBy?.profilePicture ? (
+                      <Image
+                        src={
+                          quiz.createdBy?.profilePicture ||
+                          "/images/placeholder.png"
+                        }
+                        alt={quiz.createdBy?.name}
+                        fill
+                        className='object-cover'
+                      />
+                    ) : (
+                      <div className='flex justify-center items-center bg-pink-50 w-full h-full font-medium text-pink-500 text-xl'>
+                        {getInitials(quiz.createdBy?.name || "")}
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <p className='font-medium text-xl'>{quiz.creatorName}</p>
+                    <p className='font-medium text-xl'>{quiz.createdBy.name}</p>
                     <p className='text-gray-500 text-sm'>
-                      {quiz.subject} • Quiz Enthusiast
+                      {quiz.createdBy.favouriteTopic} • {quiz.createdBy.rank}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className='space-y-4'>
+              {/* <div className='space-y-4'>
                 <div className='space-y-2'>
                   <div className='flex justify-between items-center'>
                     <div className='flex items-center'>
@@ -536,7 +464,7 @@ export default function QuizSession({
                     <span className='text-gray-500 text-xs'>Achievements</span>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -564,8 +492,8 @@ export default function QuizSession({
                 <div className='flex justify-center items-center gap-2'>
                   <XCircle className='w-5 h-5 text-red-500' />
                   <p className='font-medium text-red-700'>
-                    You didn't reach the passing score of {quiz.passingScore}%.
-                    Try again!
+                    You didn&#39;t reach the passing score of{" "}
+                    {quiz.passingScore}%. Try again!
                   </p>
                 </div>
               </div>

@@ -2,6 +2,9 @@ import mongoose from "mongoose";
 
 // Define the Question schema
 const QuestionSchema = new mongoose.Schema({
+  id: {
+    type: Number,
+  },
   questionText: {
     type: String,
     required: true,

@@ -106,7 +106,9 @@ export default function Dashboard() {
                     style={{
                       width: `${
                         user?.xp && calculateNextLevelXP(user?.xp) !== 0
-                          ? (user.xp / calculateNextLevelXP(user.xp)) * 100
+                          ? (user.xp /
+                              (calculateNextLevelXP(user.xp) + user.xp)) *
+                            100
                           : 0
                       }%`,
                     }}

@@ -1,7 +1,14 @@
 "use client";
 
-import React, { createContext, useState, useContext, ReactNode } from "react";
+import React, {
+  createContext,
+  useState,
+  useContext,
+  ReactNode,
+  useEffect,
+} from "react";
 import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
 // Define types for Rank and XP
 interface RankData {
@@ -14,11 +21,12 @@ interface RankData {
 interface RankContextType {
   xp: number;
   rank: string;
+  level: number;
   updateXPAndRank: (earnedXp: number) => void;
   calculateNextLevelXP: (xp: number) => number;
 }
 
-// Rank data with types
+// Rank data with levels assigned by order
 const rankData: RankData[] = [
   {
     rank: "🥚 Egghead",
@@ -114,14 +122,14 @@ const rankData: RankData[] = [
   },
 ];
 
-// Calculate rank based on XP
-const calculateRank = (xp: number): string => {
+// Calculate rank and corresponding level based on XP
+const calculateRankAndLevel = (xp: number): { rank: string; level: number } => {
   for (let i = 0; i < rankData.length; i++) {
     if (xp >= rankData[i].minXP && xp <= rankData[i].maxXP) {
-      return rankData[i].rank;
+      return { rank: rankData[i].rank, level: i + 1 }; // Level is based on rank index +1
     }
   }
-  return "🚀 Grandmaster of Knowledge"; // Return highest rank by default
+  return { rank: "🚀 Grandmaster of Knowledge", level: rankData.length }; // Highest rank & level
 };
 
 // Calculate XP needed to reach the next level
@@ -129,11 +137,11 @@ const calculateNextLevelXP = (xp: number): number => {
   for (let i = 0; i < rankData.length; i++) {
     if (xp >= rankData[i].minXP && xp <= rankData[i].maxXP) {
       if (i + 1 < rankData.length) {
-        return rankData[i + 1].minXP - xp; // XP needed to reach the next level
+        return rankData[i + 1].minXP - xp;
       }
     }
   }
-  return 0; // Return 0 if user is at the highest rank
+  return 0;
 };
 
 // Create the context
@@ -146,18 +154,43 @@ interface RankProviderProps {
 
 export const RankProvider = ({ children }: RankProviderProps) => {
   const [xp, setXp] = useState<number>(0);
-  const [rank, setRank] = useState<string>(calculateRank(xp));
+  const [currentRank, setCurrentRank] = useState<string>("");
+  const [currentLevel, setCurrentLevel] = useState<number>(1);
+
+  // Fetch user data
+  const { data: userData } = useQuery({
+    queryKey: ["authUser"],
+    queryFn: async () => {
+      const res = await fetch("/api/auth/user");
+      const data = await res.json();
+      return data;
+    },
+  });
+
+  // Initialize XP, rank, and level from user data
+  useEffect(() => {
+    if (userData && userData.xp !== undefined) {
+      const { rank, level } = calculateRankAndLevel(userData.xp);
+      setXp(userData.xp);
+      setCurrentRank(rank);
+      setCurrentLevel(level);
+    }
+  }, [userData]);
 
   const updateXPAndRank = (earnedXp: number): void => {
     const newXP = xp + earnedXp;
-    setXp(newXP);
-    setRank(calculateRank(newXP));
+    const { rank: newRank, level: newLevel } = calculateRankAndLevel(newXP);
 
-    // Send updated XP and rank to the backend
+    setXp(newXP);
+    setCurrentRank(newRank);
+    setCurrentLevel(newLevel);
+
+    // Send updated XP, rank, and level to the backend
     axios
-      .put("/api/user/updateProfile", {
+      .put("/api/user/update", {
         xp: newXP,
-        rank: calculateRank(newXP),
+        rank: newRank,
+        level: newLevel,
       })
       .then(() => console.log("User profile updated"))
       .catch((error) => console.error("Error updating profile:", error));
@@ -165,7 +198,13 @@ export const RankProvider = ({ children }: RankProviderProps) => {
 
   return (
     <RankContext.Provider
-      value={{ xp, rank, updateXPAndRank, calculateNextLevelXP }}
+      value={{
+        xp,
+        rank: currentRank,
+        level: currentLevel,
+        updateXPAndRank,
+        calculateNextLevelXP,
+      }}
     >
       {children}
     </RankContext.Provider>

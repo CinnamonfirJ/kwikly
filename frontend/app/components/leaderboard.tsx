@@ -1,46 +1,59 @@
+import { useQuery } from "@tanstack/react-query";
 import { Award, Trophy, Medal } from "lucide-react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
-// This would normally come from your MongoDB database
-const leaderboardData = [
-  {
-    id: 1,
-    name: "Alex Johnson",
-    level: 12,
-    xp: 3450,
-    profilePicture: "/images/placeholder.png?height=40&width=40",
-  },
-  {
-    id: 2,
-    name: "Sarah Williams",
-    level: 10,
-    xp: 2980,
-    profilePicture: "/images/placeholder.png?height=40&width=40",
-  },
-  {
-    id: 3,
-    name: "Michael Brown",
-    level: 9,
-    xp: 2750,
-    profilePicture: "/images/placeholder.png?height=40&width=40",
-  },
-  {
-    id: 4,
-    name: "Emily Davis",
-    level: 8,
-    xp: 2400,
-    profilePicture: "/images/placeholder.png?height=40&width=40",
-  },
-  {
-    id: 5,
-    name: "David Miller",
-    level: 7,
-    xp: 2100,
-    profilePicture: "/images/placeholder.png?height=40&width=40",
-  },
-];
+// Types for QuizResult and User
+interface QuizResult {
+  quizId: number;
+  score: number;
+  passed: boolean;
+  completedAt: Date;
+}
+
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  profilePicture: string;
+  rank: string;
+  favouriteTopic: string;
+  level: number;
+  quizResults: QuizResult[];
+  xp: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Fetch leaderboard data function
+const fetchLeaderboardData = async (): Promise<User[]> => {
+  const res = await fetch("/api/user/leaderboard");
+  const data = await res.json();
+  return data.users; // Assuming 'users' contains the leaderboard data
+};
 
 export default function Leaderboard() {
+  const [users, setUsers] = useState<User[]>([]);
+
+  const { data: leaderboardData } = useQuery({
+    queryKey: ["leaderboard"],
+    queryFn: fetchLeaderboardData,
+  });
+
+  useEffect(() => {
+    if (leaderboardData) {
+      setUsers(leaderboardData);
+    }
+  }, [leaderboardData]);
+
+  const getInitials = (name: string) =>
+    name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+
   return (
     <div className='bg-white rounded-lg'>
       <div className='p-4 border-pink-100 border-b'>
@@ -51,8 +64,8 @@ export default function Leaderboard() {
       </div>
       <div className='p-4'>
         <div className='space-y-4'>
-          {leaderboardData.map((user, index) => (
-            <div key={user.id} className='flex justify-between items-center'>
+          {users.map((user, index) => (
+            <div key={user._id} className='flex justify-between items-center'>
               <div className='flex items-center gap-3'>
                 <div className='flex justify-center items-center bg-pink-100 rounded-full w-8 h-8 text-pink-500'>
                   {index === 0 ? (
@@ -67,12 +80,18 @@ export default function Leaderboard() {
                 </div>
                 <div className='flex items-center gap-2'>
                   <div className='relative rounded-full w-8 h-8 overflow-hidden'>
-                    <Image
-                      src={user.profilePicture || "/placeholder.svg"}
-                      alt={user.name}
-                      fill
-                      className='object-cover'
-                    />
+                    {user.profilePicture ? (
+                      <Image
+                        src={user.profilePicture || "/images/placeholder.png"}
+                        alt={user.name}
+                        fill
+                        className='object-cover'
+                      />
+                    ) : (
+                      <div className='flex justify-center items-center bg-pink-50 w-full h-full font-medium text-pink-500 text-sm'>
+                        {getInitials(user.name)}
+                      </div>
+                    )}
                   </div>
                   <span className='font-medium'>{user.name}</span>
                 </div>

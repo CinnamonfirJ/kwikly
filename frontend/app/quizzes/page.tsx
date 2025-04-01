@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   Search,
   Filter,
@@ -14,6 +14,7 @@ import {
   Copy,
   User,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 // Mock current user - in a real app, this would come from your auth system
 const currentUser = {
@@ -23,96 +24,159 @@ const currentUser = {
   profilePicture: "/images/placeholder.png?height=100&width=100",
 };
 
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  profilePicture: string;
+  rank: string;
+  level: number;
+  xp: number;
+  // quizResults: any[]; // Replace with a proper type if needed
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  favouriteTopic: string;
+}
+
+interface Question {
+  _id: string;
+  id: number;
+  questionText: string;
+  options: string[];
+  correctAnswer: string;
+  points: number;
+}
+
+interface Quiz {
+  _id: string;
+  title: string;
+  instruction: string;
+  passingScore: number;
+  maxScore: number;
+  xpReward: number;
+  subject: string;
+  topic: string;
+  duration: string;
+  code: string;
+  createdBy: User;
+  isPublic: boolean;
+  questions: Question[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
 // This would normally come from your MongoDB database
-const allQuizzes = [
-  {
-    id: 1,
-    title: "Statistics Fundamentals Quiz",
-    subject: "Mathematics",
-    topic: "Statistics",
-    duration: "30 minutes",
-    xpReward: 50,
-    questions: 4,
-    code: "STAT101",
-    createdBy: "user123",
-    creatorName: "Sarah Johnson",
-    isPublic: true,
-  },
-  {
-    id: 2,
-    title: "Probability Quiz",
-    subject: "Mathematics",
-    topic: "Probability",
-    duration: "2 minutes",
-    xpReward: 40,
-    questions: 5,
-    code: "PROB202",
-    createdBy: "user123",
-    creatorName: "Sarah Johnson",
-    isPublic: true,
-  },
-  {
-    id: 3,
-    title: "Proper Nouns Quiz",
-    subject: "English",
-    topic: "Proper Nouns",
-    duration: "20 minutes",
-    xpReward: 45,
-    questions: 4,
-    code: "ENG303",
-    createdBy: "user456",
-    creatorName: "Michael Brown",
-    isPublic: true,
-  },
-  {
-    id: 4,
-    title: "World Geography Quiz",
-    subject: "Geography",
-    topic: "World Geography",
-    duration: "25 minutes",
-    xpReward: 55,
-    questions: 6,
-    code: "GEO404",
-    createdBy: "user789",
-    creatorName: "Emily Davis",
-    isPublic: true,
-  },
-  {
-    id: 5,
-    title: "Basic Chemistry Quiz",
-    subject: "Science",
-    topic: "Chemistry",
-    duration: "35 minutes",
-    xpReward: 60,
-    questions: 7,
-    code: "CHEM505",
-    createdBy: "user456",
-    creatorName: "Michael Brown",
-    isPublic: true,
-  },
-];
+// const allQuizzes = [
+//   {
+//     id: 1,
+//     title: "Statistics Fundamentals Quiz",
+//     subject: "Mathematics",
+//     topic: "Statistics",
+//     duration: "30 minutes",
+//     xpReward: 50,
+//     questions: 4,
+//     code: "STAT101",
+//     createdBy: "user123",
+//     creatorName: "Sarah Johnson",
+//     isPublic: true,
+//   },
+//   {
+//     id: 2,
+//     title: "Probability Quiz",
+//     subject: "Mathematics",
+//     topic: "Probability",
+//     duration: "2 minutes",
+//     xpReward: 40,
+//     questions: 5,
+//     code: "PROB202",
+//     createdBy: "user123",
+//     creatorName: "Sarah Johnson",
+//     isPublic: true,
+//   },
+//   {
+//     id: 3,
+//     title: "Proper Nouns Quiz",
+//     subject: "English",
+//     topic: "Proper Nouns",
+//     duration: "20 minutes",
+//     xpReward: 45,
+//     questions: 4,
+//     code: "ENG303",
+//     createdBy: "user456",
+//     creatorName: "Michael Brown",
+//     isPublic: true,
+//   },
+//   {
+//     id: 4,
+//     title: "World Geography Quiz",
+//     subject: "Geography",
+//     topic: "World Geography",
+//     duration: "25 minutes",
+//     xpReward: 55,
+//     questions: 6,
+//     code: "GEO404",
+//     createdBy: "user789",
+//     creatorName: "Emily Davis",
+//     isPublic: true,
+//   },
+//   {
+//     id: 5,
+//     title: "Basic Chemistry Quiz",
+//     subject: "Science",
+//     topic: "Chemistry",
+//     duration: "35 minutes",
+//     xpReward: 60,
+//     questions: 7,
+//     code: "CHEM505",
+//     createdBy: "user456",
+//     creatorName: "Michael Brown",
+//     isPublic: true,
+//   },
+// ];
 
 export default function QuizzesPage() {
-  const router = useRouter();
+  // const router = useRouter();
   const searchParams = useSearchParams();
   const codeParam = searchParams.get("code");
 
   const [searchTerm, setSearchTerm] = useState(codeParam || "");
   const [selectedSubject, setSelectedSubject] = useState("");
-  const [quizzes, setQuizzes] = useState(allQuizzes);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [copiedCode, setCopiedCode] = useState("");
+
+  // const [quiz, setQuiz] = useState<Quiz | null>(null); // Initialize with `null`
+
+  const { data: quizData } = useQuery({
+    queryKey: ["quiz"],
+    queryFn: async () => {
+      const res = await fetch("/api/quiz");
+      const data = await res.json();
+      console.log(data.quizzes);
+      return data.quizzes;
+    },
+  });
+
+  useEffect(() => {
+    if (quizData) {
+      setQuizzes(quizData);
+    }
+  }, [quizData]);
 
   // Filter quizzes based on search term and selected subject
   useEffect(() => {
+    if (!quizData) return;
+
     // Only show public quizzes or quizzes created by the current user
-    let filtered = allQuizzes.filter(
-      (quiz) => quiz.isPublic || quiz.createdBy === currentUser.id
+    let filtered = quizData.filter(
+      (quiz: Quiz) => quiz.isPublic || quiz.createdBy._id === currentUser.id
     );
 
     if (searchTerm) {
       // Check if the search term matches a quiz code exactly
       const quizByCode = filtered.find(
-        (quiz) => quiz.code.toLowerCase() === searchTerm.toLowerCase()
+        (quiz: Quiz) => quiz.code.toLowerCase() === searchTerm.toLowerCase()
       );
 
       if (quizByCode) {
@@ -120,25 +184,33 @@ export default function QuizzesPage() {
       } else {
         // Otherwise filter by title, subject, or topic
         filtered = filtered.filter(
-          (quiz) =>
+          (quiz: Quiz) =>
             quiz.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             quiz.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
             quiz.topic.toLowerCase().includes(searchTerm.toLowerCase()) ||
             quiz.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            quiz.creatorName.toLowerCase().includes(searchTerm.toLowerCase())
+            quiz.createdBy.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
       }
     }
 
     if (selectedSubject) {
-      filtered = filtered.filter((quiz) => quiz.subject === selectedSubject);
+      filtered = filtered.filter(
+        (quiz: Quiz) => quiz.subject === selectedSubject
+      );
     }
 
     setQuizzes(filtered);
-  }, [searchTerm, selectedSubject]);
+  }, [searchTerm, selectedSubject, quizData]);
 
   // Get unique subjects for filter dropdown
-  const subjects = [...new Set(allQuizzes.map((quiz) => quiz.subject))];
+  const subjects: string[] = quizData
+    ? [
+        ...new Set(
+          (quizData as { subject: string }[]).map((quiz) => quiz.subject)
+        ),
+      ]
+    : [];
 
   // Copy quiz code to clipboard
   const copyCodeToClipboard = (code: string) => {
@@ -221,17 +293,17 @@ export default function QuizzesPage() {
         <div className='gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3'>
           {quizzes.map((quiz) => (
             <div
-              key={quiz.id}
+              key={quiz?._id}
               className='bg-white shadow-sm hover:shadow-md border border-pink-100 rounded-xl overflow-hidden transition-all'
             >
               <div className='p-6'>
                 <div className='flex justify-between items-center mb-3'>
                   <span className='inline-block bg-pink-100 px-3 py-1 rounded-full font-medium text-pink-600 text-xs'>
-                    {quiz.subject}
+                    {quiz?.subject}
                   </span>
                   <div className='flex items-center text-gray-500 text-sm'>
                     <Clock className='mr-1 w-3 h-3' />
-                    {quiz.duration}
+                    {quiz.duration} minutes
                   </div>
                 </div>
                 <h3 className='mb-2 font-semibold text-lg line-clamp-1'>
@@ -239,11 +311,11 @@ export default function QuizzesPage() {
                 </h3>
                 <div className='flex items-center mb-2 text-gray-500 text-sm'>
                   <Brain className='mr-1 w-3 h-3' /> {quiz.topic} •{" "}
-                  {quiz.questions} questions
+                  {quiz?.questions.length} questions
                 </div>
                 <div className='flex items-center mb-2 text-gray-500 text-sm'>
                   <User className='mr-1 w-3 h-3' /> Created by{" "}
-                  {quiz.creatorName}
+                  {quiz.createdBy?.name}
                 </div>
                 <div className='flex items-center mb-4 text-gray-500 text-sm'>
                   <Award className='mr-1 w-4 h-4 text-pink-500' />

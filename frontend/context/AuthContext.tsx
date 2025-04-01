@@ -9,6 +9,11 @@ interface AuthContextType {
   isPending: boolean;
   isError: boolean;
   error: Error | null;
+  signup: (credentials: {
+    name: string;
+    email: string;
+    password: string;
+  }) => void;
   login: (credentials: { email: string; password: string }) => void;
   logout: () => void;
 }
@@ -18,6 +23,7 @@ const AuthContext = createContext<AuthContextType>({
   isPending: true,
   isError: false,
   error: null,
+  signup: async () => {},
   login: async () => {},
   logout: () => {},
 });
@@ -94,6 +100,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
   });
 
+  const signupFn = async (credentials: {
+    name: string;
+    email: string;
+    password: string;
+  }) => {
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Signup failed");
+      }
+
+      setError(null);
+      setIsAuthenticated(true);
+      login(credentials);
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const { mutate: signupMutate } = useMutation({
+    mutationFn: signupFn,
+    onMutate: () => setIsPending(true),
+    onError: (error: Error) => {
+      setIsError(true);
+      setError(error);
+      setIsPending(false);
+    },
+    onSuccess: () => {
+      setIsPending(false);
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      console.log("Login Successful", isAuthenticated);
+    },
+  });
+
   const loginFn = async (credentials: { email: string; password: string }) => {
     try {
       const res = await fetch("/api/auth/login", {
@@ -105,6 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       const data = await res.json();
+
       if (!res.ok) {
         throw new Error(data.message || "Login failed");
       }
@@ -133,6 +184,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
   });
 
+  const signup = (credentials: {
+    name: string;
+    email: string;
+    password: string;
+  }) => {
+    signupMutate(credentials);
+  };
+
   const login = (credentials: { email: string; password: string }) => {
     LoginMutate(credentials);
   };
@@ -146,6 +205,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         isAuthenticated,
         isPending,
+        signup,
         login,
         logout,
         isError,

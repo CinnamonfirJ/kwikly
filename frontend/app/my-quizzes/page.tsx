@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   Plus,
   Edit,
@@ -16,115 +15,156 @@ import {
   Lock,
   Globe,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import ConfirmationModal from "../components/confirmation-modal";
 
-// Mock current user - in a real app, this would come from your auth system
-const currentUser = {
-  id: "user123",
-  name: "Sarah Johnson",
-  email: "sarah@example.com",
-  profilePicture: "/images/placeholder.png?height=100&width=100",
-};
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  profilePicture: string;
+  rank: string;
+  level: number;
+  xp: number;
+  // quizResults: any[]; // Replace with a proper type if needed
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  favouriteTopic: string;
+}
 
-// Mock user's quizzes - in a real app, these would be fetched from your API
-const userQuizzes = [
-  {
-    id: 1,
-    code: "STAT101",
-    title: "Statistics Fundamentals Quiz",
-    subject: "Mathematics",
-    topic: "Statistics",
-    duration: "30 minutes",
-    xpReward: 50,
-    questions: 4,
-    createdBy: "user123",
-    creatorName: "Sarah Johnson",
-    isPublic: true,
-    createdAt: "2023-04-15T10:30:00Z",
-  },
-  {
-    id: 2,
-    code: "PROB202",
-    title: "Probability Quiz",
-    subject: "Mathematics",
-    topic: "Probability",
-    duration: "2 minutes",
-    xpReward: 40,
-    questions: 5,
-    createdBy: "user123",
-    creatorName: "Sarah Johnson",
-    isPublic: false,
-    createdAt: "2023-04-10T14:20:00Z",
-  },
-  {
-    id: 3,
-    code: "ENG303",
-    title: "Proper Nouns Quiz",
-    subject: "English",
-    topic: "Proper Nouns",
-    duration: "20 minutes",
-    xpReward: 45,
-    questions: 4,
-    createdBy: "user123",
-    creatorName: "Sarah Johnson",
-    isPublic: true,
-    createdAt: "2023-04-05T09:15:00Z",
-  },
-];
+interface Question {
+  _id: string;
+  id: number;
+  questionText: string;
+  options: string[];
+  correctAnswer: string;
+  points: number;
+}
+
+interface Quiz {
+  _id: string;
+  title: string;
+  instruction: string;
+  passingScore: number;
+  maxScore: number;
+  xpReward: number;
+  subject: string;
+  topic: string;
+  duration: string;
+  code: string;
+  createdBy: User;
+  isPublic: boolean;
+  questions: Question[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
 
 export default function MyQuizzesPage() {
-  const router = useRouter();
-  const [quizzes, setQuizzes] = useState(userQuizzes);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [copiedCode, setCopiedCode] = useState("");
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [quizToDelete, setQuizToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // In a real app, you would fetch the user's quizzes from your API
-  // useEffect(() => {
-  //   const fetchUserQuizzes = async () => {
-  //     const response = await fetch('/api/quizzes/my-quizzes');
-  //     const data = await response.json();
-  //     setQuizzes(data);
-  //   };
-  //   fetchUserQuizzes();
-  // }, []);
+  const { data: quizData } = useQuery({
+    queryKey: ["quiz"],
+    queryFn: async () => {
+      const res = await fetch("/api/quiz/user/me");
+      const data = await res.json();
+      console.log(data.quizzes);
+      return data.quizzes;
+    },
+  });
+
+  useEffect(() => {
+    if (quizData) {
+      setQuizzes(quizData);
+    }
+  }, [quizData]);
 
   // Copy quiz code to clipboard
-  const copyCodeToClipboard = (code) => {
+  const copyCodeToClipboard = (code: string) => {
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(""), 2000);
   };
 
-  // Toggle quiz visibility (public/private)
-  const toggleQuizVisibility = (id) => {
+  const toggleQuizVisibility = async (id: string) => {
+    // Find the quiz to update
+    const quizToToggle = quizzes.find((quiz) => quiz._id === id);
+    if (!quizToToggle) return;
+
+    // Determine the new visibility
+    const newVisibility = !quizToToggle.isPublic;
+
+    // Optimistically update the UI
     setQuizzes(
       quizzes.map((quiz) =>
-        quiz.id === id ? { ...quiz, isPublic: !quiz.isPublic } : quiz
+        quiz._id === id ? { ...quiz, isPublic: newVisibility } : quiz
       )
     );
 
-    // In a real app, you would update the quiz in your database
-    // fetch(`/api/quizzes/${id}`, {
-    //   method: 'PATCH',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ isPublic: !quiz.isPublic })
-    // });
+    try {
+      const response = await fetch(`/api/quiz/${id}/isPublic`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPublic: newVisibility }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update visibility");
+      }
+    } catch (error) {
+      // Revert the UI update if the API call fails
+      setQuizzes(
+        quizzes.map((quiz) =>
+          quiz._id === id ? { ...quiz, isPublic: !newVisibility } : quiz
+        )
+      );
+      console.error("Error updating quiz visibility:", error);
+    }
   };
 
-  // Delete quiz
-  const deleteQuiz = (id) => {
-    if (
-      confirm(
-        "Are you sure you want to delete this quiz? This action cannot be undone."
-      )
-    ) {
-      setQuizzes(quizzes.filter((quiz) => quiz.id !== id));
+  // Function to open the delete confirmation modal
+  const openDeleteModal = (id: string) => {
+    setQuizToDelete(id);
+    setDeleteModalOpen(true);
+  };
 
-      // In a real app, you would delete the quiz from your database
-      // fetch(`/api/quizzes/${id}`, { method: 'DELETE' });
+  // Delete quiz function (called when user confirms in the modal)
+  const deleteQuiz = async () => {
+    if (!quizToDelete) return;
+
+    // Save the current state to revert in case of an error
+    const originalQuizzes = [...quizzes];
+    setIsDeleting(true);
+
+    // Optimistically update the UI
+    setQuizzes(quizzes.filter((quiz) => quiz._id !== quizToDelete));
+
+    try {
+      const response = await fetch(`/api/quiz/${quizToDelete}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete quiz");
+      }
+    } catch (error) {
+      // If deletion fails, revert the UI update
+      setQuizzes(originalQuizzes);
+      console.error("Error deleting quiz:", error);
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalOpen(false);
+      setQuizToDelete(null);
     }
   };
 
   // Format date
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
@@ -157,8 +197,8 @@ export default function MyQuizzesPage() {
           </div>
           <h3 className='mb-2 font-semibold text-xl'>No quizzes yet</h3>
           <p className='mb-4 text-gray-500'>
-            You haven't created any quizzes yet. Create your first quiz to get
-            started!
+            You haven&#39;t created any quizzes yet. Create your first quiz to
+            get started!
           </p>
           <Link
             href='/create-quiz'
@@ -171,7 +211,7 @@ export default function MyQuizzesPage() {
         <div className='space-y-6'>
           {quizzes.map((quiz) => (
             <div
-              key={quiz.id}
+              key={quiz._id}
               className='bg-white shadow-sm hover:shadow-md border border-pink-100 rounded-xl overflow-hidden transition-all'
             >
               <div className='p-6'>
@@ -200,13 +240,14 @@ export default function MyQuizzesPage() {
                         <Brain className='mr-1 w-4 h-4' /> {quiz.topic}
                       </div>
                       <div className='flex items-center'>
-                        <Clock className='mr-1 w-4 h-4' /> {quiz.duration}
+                        <Clock className='mr-1 w-4 h-4' /> {quiz.duration}{" "}
+                        minutes
                       </div>
                       <div className='flex items-center'>
                         <Award className='mr-1 w-4 h-4 text-pink-500' />{" "}
                         {quiz.xpReward} XP
                       </div>
-                      <div>{quiz.questions} questions</div>
+                      <div>{quiz.questions.length} questions</div>
                     </div>
                   </div>
                 </div>
@@ -241,13 +282,13 @@ export default function MyQuizzesPage() {
                     <Eye className='mr-1 w-4 h-4' /> Take Quiz
                   </Link>
                   <Link
-                    href={`/edit-quiz/${quiz.id}`}
+                    href={`/edit-quiz/${quiz._id}`}
                     className='inline-flex justify-center items-center bg-white hover:bg-gray-50 px-4 py-2 border border-gray-200 rounded-full font-medium text-gray-700 transition-colors'
                   >
                     <Edit className='mr-1 w-4 h-4' /> Edit
                   </Link>
                   <button
-                    onClick={() => toggleQuizVisibility(quiz.id)}
+                    onClick={() => toggleQuizVisibility(quiz._id)}
                     className='inline-flex justify-center items-center bg-white hover:bg-gray-50 px-4 py-2 border border-gray-200 rounded-full font-medium text-gray-700 transition-colors'
                   >
                     {quiz.isPublic ? (
@@ -288,7 +329,7 @@ export default function MyQuizzesPage() {
                     )}
                   </button>
                   <button
-                    onClick={() => deleteQuiz(quiz.id)}
+                    onClick={() => openDeleteModal(quiz._id)}
                     className='inline-flex justify-center items-center bg-white hover:bg-red-50 px-4 py-2 border border-red-200 rounded-full font-medium text-red-500 transition-colors'
                   >
                     <Trash2 className='mr-1 w-4 h-4' /> Delete
@@ -299,6 +340,19 @@ export default function MyQuizzesPage() {
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={deleteQuiz}
+        title='Delete Quiz'
+        description='Are you sure you want to delete this quiz? This action cannot be undone and all quiz data will be permanently lost.'
+        confirmText='Delete Quiz'
+        cancelText='Cancel'
+        type='delete'
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

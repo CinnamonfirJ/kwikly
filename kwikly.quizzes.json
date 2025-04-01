@@ -1,0 +1,341 @@
+[
+  {
+    "_id": {
+      "$oid": "67eaf1c9af005cee30b91155"
+    },
+    "title": "Python Fundamentals Quiz",
+    "instruction": "Answer all questions carefully.",
+    "passingScore": 50,
+    "maxScore": 100,
+    "xpReward": 250,
+    "subject": "Programming",
+    "topic": "Python",
+    "duration": "25",
+    "code": "MWX471",
+    "createdBy": {
+      "$oid": "67ea759be49179281f018065"
+    },
+    "isPublic": true,
+    "questions": [
+      {
+        "id": 1,
+        "questionText": "Which keyword is used to define a function in Python?",
+        "options": ["function", "define", "def", "fun"],
+        "correctAnswer": "def",
+        "points": 1,
+        "_id": {
+          "$oid": "67eaf1c9af005cee30b91156"
+        }
+      },
+      {
+        "id": 2,
+        "questionText": "What will `print(type([]))` output?",
+        "options": [
+          "<class 'list'>",
+          "<class 'tuple'>",
+          "<class 'dict'>",
+          "Error"
+        ],
+        "correctAnswer": "<class 'list'>",
+        "points": 1,
+        "_id": {
+          "$oid": "67eaf1c9af005cee30b91157"
+        }
+      }
+    ],
+    "createdAt": {
+      "$date": "2025-03-31T19:49:29.943Z"
+    },
+    "updatedAt": {
+      "$date": "2025-03-31T19:49:29.943Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "67eaf3ec5363c77c4d7dbe3e"
+    },
+    "title": "HTML & CSS Basics Quiz",
+    "instruction": "Answer all questions carefully.",
+    "passingScore": 60,
+    "maxScore": 100,
+    "xpReward": 150,
+    "subject": "Web Development",
+    "topic": "HTML & CSS",
+    "duration": "20",
+    "code": "TVJ060",
+    "createdBy": {
+      "$oid": "67ea7581e49179281f01805f"
+    },
+    "isPublic": true,
+    "questions": [
+      {
+        "id": 1,
+        "questionText": "What does the `<a>` tag in HTML represent?",
+        "options": ["Anchor tag", "Article tag", "Audio tag", "Aside tag"],
+        "correctAnswer": "Anchor tag",
+        "points": 1,
+        "_id": {
+          "$oid": "67eaf3ec5363c77c4d7dbe3f"
+        }
+      },
+      {
+        "id": 2,
+        "questionText": "Which property is used to change the background color in CSS?",
+        "options": ["color", "background-color", "bgcolor", "background"],
+        "correctAnswer": "background-color",
+        "points": 1,
+        "_id": {
+          "$oid": "67eaf3ec5363c77c4d7dbe40"
+        }
+      }
+    ],
+    "createdAt": {
+      "$date": "2025-03-31T19:58:36.589Z"
+    },
+    "updatedAt": {
+      "$date": "2025-03-31T19:58:36.589Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "67eaf4015363c77c4d7dbe45"
+    },
+    "title": "HTML & CSS Basics Quiz",
+    "instruction": "Answer all questions carefully.",
+    "passingScore": 60,
+    "maxScore": 100,
+    "xpReward": 150,
+    "subject": "Web Development",
+    "topic": "HTML & CSS",
+    "duration": "20",
+    "code": "KDN115",
+    "createdBy": {
+      "$oid": "67ea759be49179281f018065"
+    },
+    "isPublic": true,
+    "questions": [
+      {
+        "id": 1,
+        "questionText": "What does the `<a>` tag in HTML represent?",
+        "options": ["Anchor tag", "Article tag", "Audio tag", "Aside tag"],
+        "correctAnswer": "Anchor tag",
+        "points": 1,
+        "_id": {
+          "$oid": "67eaf4015363c77c4d7dbe46"
+        }
+      },
+      {
+        "id": 2,
+        "questionText": "Which property is used to change the background color in CSS?",
+        "options": ["color", "background-color", "bgcolor", "background"],
+        "correctAnswer": "background-color",
+        "points": 1,
+        "_id": {
+          "$oid": "67eaf4015363c77c4d7dbe47"
+        }
+      }
+    ],
+    "createdAt": {
+      "$date": "2025-03-31T19:58:57.776Z"
+    },
+    "updatedAt": {
+      "$date": "2025-03-31T19:58:57.776Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "67eaf4095363c77c4d7dbe4b"
+    },
+    "title": "Data Structures & Algorithms Quiz",
+    "instruction": "Answer all questions carefully.",
+    "passingScore": 55,
+    "maxScore": 100,
+    "xpReward": 300,
+    "subject": "Computer Science",
+    "topic": "Data Structures & Algorithms",
+    "duration": "30",
+    "code": "GKN840",
+    "createdBy": {
+      "$oid": "67ea759be49179281f018065"
+    },
+    "isPublic": true,
+    "questions": [
+      {
+        "id": 1,
+        "questionText": "Which data structure follows the LIFO principle?",
+        "options": ["Queue", "Stack", "Heap", "Graph"],
+        "correctAnswer": "Stack",
+        "points": 1,
+        "_id": {
+          "$oid": "67eaf4095363c77c4d7dbe4c"
+        }
+      },
+      {
+        "id": 2,
+        "questionText": "What is the time complexity of searching an element in an unordered array?",
+        "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+        "correctAnswer": "O(n)",
+        "points": 1,
+        "_id": {
+          "$oid": "67eaf4095363c77c4d7dbe4d"
+        }
+      }
+    ],
+    "createdAt": {
+      "$date": "2025-03-31T19:59:05.789Z"
+    },
+    "updatedAt": {
+      "$date": "2025-03-31T19:59:05.789Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "67eaf4135363c77c4d7dbe51"
+    },
+    "title": "Cybersecurity Basics Quiz",
+    "instruction": "Answer all questions carefully.",
+    "passingScore": 70,
+    "maxScore": 100,
+    "xpReward": 350,
+    "subject": "Cybersecurity",
+    "topic": "Cybersecurity Basics",
+    "duration": "30",
+    "code": "NYR282",
+    "createdBy": {
+      "$oid": "67ea759be49179281f018065"
+    },
+    "isPublic": true,
+    "questions": [
+      {
+        "id": 1,
+        "questionText": "What does HTTPS stand for?",
+        "options": [
+          "HyperText Transfer Protocol Secure",
+          "High Text Transfer Protocol Secure",
+          "Hyper Transfer Text Secure",
+          "HyperText Transfer Process Secure"
+        ],
+        "correctAnswer": "HyperText Transfer Protocol Secure",
+        "points": 1,
+        "_id": {
+          "$oid": "67eaf4135363c77c4d7dbe52"
+        }
+      },
+      {
+        "id": 2,
+        "questionText": "Which type of attack involves an attacker intercepting communication between two parties?",
+        "options": ["Phishing", "Man-in-the-Middle", "DDoS", "Brute Force"],
+        "correctAnswer": "Man-in-the-Middle",
+        "points": 1,
+        "_id": {
+          "$oid": "67eaf4135363c77c4d7dbe53"
+        }
+      }
+    ],
+    "createdAt": {
+      "$date": "2025-03-31T19:59:15.955Z"
+    },
+    "updatedAt": {
+      "$date": "2025-03-31T19:59:15.955Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "67eaf4275363c77c4d7dbe58"
+    },
+    "title": "General Science Quiz",
+    "instruction": "Answer all questions carefully.",
+    "passingScore": 50,
+    "maxScore": 100,
+    "xpReward": 200,
+    "subject": "Science",
+    "topic": "General Knowledge",
+    "duration": "25",
+    "code": "XCZ964",
+    "createdBy": {
+      "$oid": "67ea7581e49179281f01805f"
+    },
+    "isPublic": true,
+    "questions": [
+      {
+        "id": 1,
+        "questionText": "What is the chemical symbol for gold?",
+        "options": ["Au", "Ag", "Pb", "Fe"],
+        "correctAnswer": "Au",
+        "points": 1,
+        "_id": {
+          "$oid": "67eaf4275363c77c4d7dbe59"
+        }
+      },
+      {
+        "id": 2,
+        "questionText": "Which planet is known as the Red Planet?",
+        "options": ["Mars", "Venus", "Jupiter", "Saturn"],
+        "correctAnswer": "Mars",
+        "points": 1,
+        "_id": {
+          "$oid": "67eaf4275363c77c4d7dbe5a"
+        }
+      }
+    ],
+    "createdAt": {
+      "$date": "2025-03-31T19:59:35.435Z"
+    },
+    "updatedAt": {
+      "$date": "2025-03-31T19:59:35.435Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "67eaf5bada1481f8fcd6f3c4"
+    },
+    "title": "General Science Quiz",
+    "instruction": "Answer all questions carefully.",
+    "passingScore": 50,
+    "maxScore": 100,
+    "xpReward": 200,
+    "subject": "Science",
+    "topic": "General Knowledge",
+    "duration": "25",
+    "code": "80Y2C-70173",
+    "createdBy": {
+      "$oid": "67ea7581e49179281f01805f"
+    },
+    "isPublic": true,
+    "questions": [
+      {
+        "id": 1,
+        "questionText": "What is the chemical symbol for gold?",
+        "options": ["Au", "Ag", "Pb", "Fe"],
+        "correctAnswer": "Au",
+        "points": 1,
+        "_id": {
+          "$oid": "67eaf5bada1481f8fcd6f3c5"
+        }
+      },
+      {
+        "id": 2,
+        "questionText": "Which planet is known as the Red Planet?",
+        "options": ["Mars", "Venus", "Jupiter", "Saturn"],
+        "correctAnswer": "Mars",
+        "points": 1,
+        "_id": {
+          "$oid": "67eaf5bada1481f8fcd6f3c6"
+        }
+      }
+    ],
+    "createdAt": {
+      "$date": "2025-03-31T20:06:18.509Z"
+    },
+    "updatedAt": {
+      "$date": "2025-03-31T20:06:18.509Z"
+    },
+    "__v": 0
+  }
+]
