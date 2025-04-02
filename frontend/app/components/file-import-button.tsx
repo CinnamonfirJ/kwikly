@@ -1,0 +1,294 @@
+"use client";
+
+import type React from "react";
+
+import { useState, useRef } from "react";
+import { Upload, FileText, AlertCircle } from "lucide-react";
+import { useToastContext } from "@/providers/toast-provider";
+
+interface FileImportButtonProps {
+  onImport: (data: any) => void;
+}
+
+export default function FileImportButton({ onImport }: FileImportButtonProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const toast = useToastContext();
+
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const parseCSV = (text: string) => {
+    const lines = text.split("\n");
+    if (lines.length < 2) {
+      throw new Error(
+        "CSV file must contain at least a header row and one data row"
+      );
+    }
+
+    const headers = lines[0].split(",").map((h) => h.trim());
+
+    // Check if the CSV has the expected format
+    const requiredHeaders = ["title", "subject", "topic", "instruction"];
+    const missingHeaders = requiredHeaders.filter((h) => !headers.includes(h));
+
+    if (missingHeaders.length > 0) {
+      throw new Error(
+        `CSV is missing required headers: ${missingHeaders.join(", ")}`
+      );
+    }
+
+    // Parse the quiz basic info from the first data row
+    const quizInfoRow = lines[1].split(",").map((cell) => cell.trim());
+    const quizInfo: Record<string, string> = {};
+
+    headers.forEach((header, index) => {
+      if (index < quizInfoRow.length) {
+        quizInfo[header] = quizInfoRow[index];
+      }
+    });
+
+    // Parse questions if they exist in the CSV
+    const questions = [];
+
+    // Check if we have question headers
+    const questionHeaders = [
+      "questionText",
+      "options",
+      "correctAnswer",
+      "points",
+    ];
+    const hasQuestionHeaders = questionHeaders.every((h) =>
+      headers.includes(h)
+    );
+
+    if (hasQuestionHeaders) {
+      // Start from row 2 (index 1) as row 1 contains quiz info
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+
+        const cells = lines[i].split(",").map((cell) => cell.trim());
+
+        const question: Record<string, any> = {};
+
+        headers.forEach((header, index) => {
+          if (index < cells.length) {
+            if (header === "options") {
+              // Options should be a JSON array string like "['Option 1', 'Option 2']"
+              try {
+                question[header] = JSON.parse(cells[index].replace(/'/g, '"'));
+              } catch (e) {
+                question[header] = [cells[index]];
+              }
+            } else if (header === "points") {
+              question[header] = Number.parseInt(cells[index]) || 1;
+            } else {
+              question[header] = cells[index];
+            }
+          }
+        });
+
+        if (question.questionText) {
+          questions.push(question);
+        }
+      }
+    }
+
+    return {
+      ...quizInfo,
+      questions: questions.length > 0 ? questions : undefined,
+    };
+  };
+
+  const parseJSON = (text: string) => {
+    const data = JSON.parse(text);
+
+    // Validate the JSON structure
+    if (!data.title || !data.subject || !data.topic || !data.instruction) {
+      throw new Error(
+        "JSON must contain title, subject, topic, and instruction fields"
+      );
+    }
+
+    return data;
+  };
+
+  const parsePlainText = (text: string) => {
+    const lines = text.split("\n").filter((line) => line.trim());
+
+    if (lines.length < 4) {
+      throw new Error(
+        "Text file must contain at least title, subject, topic, and instruction"
+      );
+    }
+
+    // Basic parsing - assume first 4 lines are title, subject, topic, instruction
+    const quizInfo = {
+      title: lines[0].trim(),
+      subject: lines[1].trim(),
+      topic: lines[2].trim(),
+      instruction: lines[3].trim(),
+    };
+
+    // Check if there are questions in the format "Q: question text, A: option1, B: option2, C: option3, Correct: A"
+    const questions = [];
+    let currentQuestion: any = null;
+
+    for (let i = 4; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      if (line.startsWith("Q:")) {
+        // Save previous question if exists
+        if (currentQuestion) {
+          questions.push(currentQuestion);
+        }
+
+        // Start new question
+        currentQuestion = {
+          questionText: line.substring(2).trim(),
+          options: [],
+          correctAnswer: "",
+          points: 1,
+        };
+      } else if (line.startsWith("Correct:") && currentQuestion) {
+        const correctLetter = line.substring(8).trim();
+        const index = correctLetter.charCodeAt(0) - 65; // Convert A to 0, B to 1, etc.
+
+        if (index >= 0 && index < currentQuestion.options.length) {
+          currentQuestion.correctAnswer = currentQuestion.options[index];
+        }
+      } else if (line.match(/^[A-Z]:/) && currentQuestion) {
+        // This is an option like "A: option text"
+        const option = line.substring(2).trim();
+        currentQuestion.options.push(option);
+      } else if (line.startsWith("Points:") && currentQuestion) {
+        currentQuestion.points = Number.parseInt(line.substring(7).trim()) || 1;
+      }
+    }
+
+    // Add the last question
+    if (currentQuestion && currentQuestion.options.length > 0) {
+      questions.push(currentQuestion);
+    }
+
+    return {
+      ...quizInfo,
+      questions: questions.length > 0 ? questions : undefined,
+    };
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsLoading(true);
+
+    try {
+      const text = await file.text();
+      let data;
+
+      // Parse based on file type
+      if (file.name.endsWith(".csv")) {
+        data = parseCSV(text);
+      } else if (file.name.endsWith(".json")) {
+        data = parseJSON(text);
+      } else {
+        // Assume plain text
+        data = parsePlainText(text);
+      }
+
+      onImport(data);
+      toast.success(`Successfully imported quiz from ${file.name}`);
+    } catch (error) {
+      console.error("Error parsing file:", error);
+      toast.error(
+        `Error importing file: ${error.message || "Invalid file format"}`
+      );
+    } finally {
+      setIsLoading(false);
+      // Reset the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  return (
+    <div>
+      <input
+        type='file'
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept='.csv,.json,.txt'
+        className='hidden'
+      />
+      <button
+        onClick={handleButtonClick}
+        disabled={isLoading}
+        className='inline-flex justify-center items-center bg-white hover:bg-pink-50 px-4 py-2 border border-pink-200 rounded-full font-medium text-pink-500 transition-colors'
+      >
+        {isLoading ? (
+          <>
+            <svg
+              className='mr-2 -ml-1 w-4 h-4 text-pink-500 animate-spin'
+              xmlns='http://www.w3.org/2000/svg'
+              fill='none'
+              viewBox='0 0 24 24'
+            >
+              <circle
+                className='opacity-25'
+                cx='12'
+                cy='12'
+                r='10'
+                stroke='currentColor'
+                strokeWidth='4'
+              ></circle>
+              <path
+                className='opacity-75'
+                fill='currentColor'
+                d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+              ></path>
+            </svg>
+            Importing...
+          </>
+        ) : (
+          <>
+            <Upload className='mr-2 w-4 h-4' />
+            Import Quiz
+          </>
+        )}
+      </button>
+
+      <div className='flex items-start gap-1 mt-2 text-gray-500 text-xs'>
+        <FileText className='flex-shrink-0 mt-0.5 w-3 h-3' />
+        <span>Supported formats: CSV, JSON, TXT</span>
+      </div>
+
+      <div className='hidden md:block bg-blue-50 mt-4 p-3 border border-blue-200 rounded-lg text-blue-800 text-sm'>
+        <div className='flex items-start gap-2'>
+          <AlertCircle className='flex-shrink-0 mt-0.5 w-5 h-5 text-blue-500' />
+          <div>
+            <p className='mb-1 font-medium'>Import Format Tips:</p>
+            <ul className='space-y-1 ml-1 list-disc list-inside'>
+              <li>
+                <strong>CSV:</strong> First row should be headers
+                (title,subject,topic,instruction,questionText,options,correctAnswer,points)
+              </li>
+              <li>
+                <strong>JSON:</strong> Must include title, subject, topic,
+                instruction fields and optional questions array
+              </li>
+              <li>
+                <strong>Text:</strong> First 4 lines should be title, subject,
+                topic, and instruction. Questions format: Q: question, A:
+                option1, B: option2, C: option3, D: option4, Correct: A, Points:
+                1
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

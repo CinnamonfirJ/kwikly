@@ -1,4 +1,5 @@
 import User from "../models/user.model.js";
+import bcrypt from "bcryptjs";
 import { v2 as cloudinary } from "cloudinary";
 
 export const getAllUsers = async (req, res) => {
@@ -63,7 +64,7 @@ export const updateUserProfile = async (req, res) => {
   const userId = req.user._id;
 
   try {
-    let user = await User.findById(userId);
+    const user = await User.findById(userId);
     if (!user) return res.status(400).json({ message: "User not found" });
 
     if (
@@ -114,7 +115,7 @@ export const updateUserProfile = async (req, res) => {
     user.favouriteTopic = favouriteTopic || user.favouriteTopic;
     user.profilePicture = profilePicture || user.profilePicture;
 
-    user = await user.save();
+    await user.save();
 
     user.password = null;
     res.status(200).json(user);

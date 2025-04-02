@@ -117,6 +117,7 @@ export default function QuizSession({
   >({});
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [score, setScore] = useState(0);
+  const [totalScore, setTotalScore] = useState(0);
 
   const { updateXPAndRank } = useRank();
 
@@ -279,22 +280,12 @@ export default function QuizSession({
     const maxPossiblePoints = calculateTotalPoints(quiz);
     const percentage = Math.round((totalPoints / maxPossiblePoints) * 100);
     setScore(percentage);
+    setTotalScore(totalPoints);
 
     // Debugging logs
     console.log("Percentage:", percentage);
     console.log("Passing Score:", quiz.passingScore);
     console.log("XP Reward:", quiz.xpReward);
-
-    // userId: 'userId123',
-    // quizId: 'quizId123',
-    // score: 85,
-    // passed: true,
-    // title: 'Math Quiz',
-    // passingScore: 50,
-    // maxScore: 100,
-    // subject: 'Math',
-    // topic: 'Algebra',
-    // duration: '20 minutes',
 
     const userId = authUser._id;
     const quizId = quiz._id;
@@ -620,7 +611,7 @@ export default function QuizSession({
             )}
 
             <p className='mb-8 text-lg'>
-              You scored {score} out of {quiz.maxScore} points.
+              You scored {totalScore} out of {quiz.maxScore} points.
             </p>
 
             <div className='flex sm:flex-row flex-col justify-center gap-4'>
