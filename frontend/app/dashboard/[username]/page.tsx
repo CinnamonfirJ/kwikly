@@ -11,7 +11,7 @@ import { useRank } from "@/context/RankContext";
 
 // Types for QuizResult and User
 interface QuizResult {
-  quizId: number;
+  quizId: string;
   score: number;
   passed: boolean;
   completedAt: Date;
@@ -31,9 +31,58 @@ interface User {
   updatedAt: string;
 }
 
+interface Quiz {
+  _id: string;
+  title: string;
+  instruction: string;
+  passingScore: number;
+  maxScore: number;
+  xpReward: number;
+  subject: string;
+  topic: string;
+  duration: string;
+  code: string;
+  createdBy: User;
+  isPublic: boolean;
+  // questions: Question[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
 export default function Dashboard() {
+  const [activeTab, setActiveTab] = useState("quizHistory"); // default tab is 'quizHistory'
   const [user, setUser] = useState<User | null>(null); // Initialize with `null`
+  const [quizResults, setQuizResults] = useState<Quiz>();
   const { calculateNextLevelXP } = useRank();
+
+  const { data: userResults } = useQuery({
+    queryKey: ["userResults"],
+    queryFn: async () => {
+      try {
+        // Ensure `user?.quizResults` is an array and map correctly over it
+        const quizIds = user?.quizResults?.map((result) => result.quizId);
+
+        // If there are no quiz results, handle it gracefully (perhaps returning empty or null)
+        if (!quizIds || quizIds.length === 0) {
+          return null; // Or an empty array, depending on your logic
+        }
+
+        // Now fetch using the correctly formatted URL
+        const res = await fetch(`/api/quiz/${quizIds.join(",")}`); // Use `.join(",")` to pass multiple IDs
+        const data = await res.json();
+        return data;
+      } catch (error) {
+        throw error;
+      }
+    },
+  });
+
+  console.log(
+    `The Collected /api/quiz/${user?.quizResults
+      ?.map((results) => results.quizId)
+      .join(",")}`
+  );
 
   const { data: userData } = useQuery({
     queryKey: ["authUser"],
@@ -48,7 +97,13 @@ export default function Dashboard() {
     if (userData) {
       setUser(userData);
     }
-  }, [userData]);
+
+    if (userResults) {
+      setQuizResults(userResults);
+    }
+  }, [userData, userResults]);
+
+  console.log(quizResults);
 
   const getInitials = (name: string) =>
     name
@@ -149,19 +204,43 @@ export default function Dashboard() {
         <div className='md:col-span-2'>
           <div className='bg-white shadow-sm border border-pink-100 rounded-xl overflow-hidden'>
             <div className='flex border-pink-100 border-b'>
-              <button className='flex-1 px-4 py-3 border-pink-500 border-b-2 font-medium text-pink-500 text-center'>
+              {/* Quiz History Button */}
+              <button
+                onClick={() => setActiveTab("quizHistory")}
+                className={`flex-1 px-4 py-3  border-b-2 font-medium text-center ${
+                  activeTab === "quizHistory"
+                    ? "text-pink-500 border-pink-500"
+                    : "text-gray-500 border-transparent"
+                } hover:text-pink-500 transition-colors `}
+              >
                 Quiz History
               </button>
-              <button className='flex-1 px-4 py-3 font-medium text-gray-500 hover:text-pink-500 text-center transition-colors'>
+
+              {/* Leaderboard Button */}
+              <button
+                onClick={() => setActiveTab("leaderboard")}
+                className={`flex-1 px-4 py-3  border-b-2 font-medium text-center ${
+                  activeTab === "leaderboard"
+                    ? "text-pink-500 border-pink-500"
+                    : "text-gray-500 border-transparent"
+                } hover:text-pink-500 transition-colors `}
+              >
                 Leaderboard
               </button>
             </div>
-            <div className='p-4'>
-              <QuizHistory />
-            </div>
-            <div className='p-4'>
-              <Leaderboard />
-            </div>
+
+            {/* Conditional rendering based on active tab */}
+            {activeTab === "quizHistory" && (
+              <div className='p-4'>
+                <QuizHistory />
+              </div>
+            )}
+
+            {activeTab === "leaderboard" && (
+              <div className='p-4'>
+                <Leaderboard />
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Award, Trophy, Medal } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -34,6 +34,9 @@ const fetchLeaderboardData = async (): Promise<User[]> => {
 
 export default function Leaderboard() {
   const [users, setUsers] = useState<User[]>([]);
+  const queryClient = useQueryClient();
+
+  const authUser = queryClient.getQueryData<User>(["authUser"]);
 
   const { data: leaderboardData } = useQuery({
     queryKey: ["leaderboard"],
@@ -93,7 +96,15 @@ export default function Leaderboard() {
                       </div>
                     )}
                   </div>
-                  <span className='font-medium'>{user.name}</span>
+                  <div className='flex justify-between items-center gap-5'>
+                    <span className='font-medium'>{user.name}</span>
+                    {/* Only show "Me" if this user is the logged-in user */}
+                    {authUser?.name === user.name && (
+                      <span className='bg-pink-50 p-1 px-2 rounded-3xl font-medium text-pink-500 text-xs'>
+                        Me
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className='flex items-center gap-2'>

@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 // Define the QuizResult schema
 const QuizResultSchema = new mongoose.Schema({
   quizId: {
-    type: Number,
+    type: String,
     required: true,
   },
   score: {
@@ -17,6 +17,30 @@ const QuizResultSchema = new mongoose.Schema({
   completedAt: {
     type: Date,
     default: Date.now,
+  },
+  title: {
+    type: String,
+    required: true,
+  },
+  passingScore: {
+    type: Number,
+    required: true,
+  },
+  maxScore: {
+    type: Number,
+    required: true,
+  },
+  subject: {
+    type: String,
+    required: true,
+  },
+  topic: {
+    type: String,
+    required: true,
+  },
+  duration: {
+    type: String,
+    required: true,
   },
 });
 

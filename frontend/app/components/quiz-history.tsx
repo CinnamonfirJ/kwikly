@@ -1,49 +1,109 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
 
-// This would normally come from your MongoDB database
-const quizHistory = [
-  {
-    id: 1,
-    title: "Statistics Fundamentals Quiz",
-    date: "2023-04-15",
-    score: 75,
-    passingScore: 70,
-    maxScore: 100,
-    subject: "Mathematics",
-    topic: "Statistics",
-    duration: "30 minutes",
-    passed: true,
-  },
-  {
-    id: 2,
-    title: "Probability Quiz",
-    date: "2023-04-10",
-    score: 80,
-    passingScore: 60,
-    maxScore: 100,
-    subject: "Mathematics",
-    topic: "Probability",
-    duration: "30 minutes",
-    passed: true,
-  },
-  {
-    id: 3,
-    title: "Proper Nouns Quiz",
-    date: "2023-04-05",
-    score: 60,
-    passingScore: 80,
-    maxScore: 100,
-    subject: "English",
-    topic: "Proper Nouns",
-    duration: "20 minutes",
-    passed: false,
-  },
-];
+// Types for QuizResult and User
+interface QuizResult {
+  quizId: string;
+  score: number;
+  passed: boolean;
+  completedAt: Date;
+  title: string;
+  passingScore: number;
+  maxScore: number;
+  subject: string;
+  topic: string;
+  duration: string;
+}
+
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  profilePicture: string;
+  rank: string;
+  favouriteTopic: string;
+  level: number;
+  quizResults: QuizResult[];
+  xp: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Quiz {
+  message: string;
+  quiz: {
+    _id: string;
+    title: string;
+    instruction: string;
+    passingScore: number;
+    maxScore: number;
+    xpReward: number;
+    subject: string;
+    topic: string;
+    duration: string;
+    code: string;
+    createdBy: User;
+    isPublic: boolean;
+    // questions: Question[];
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+  };
+}
+
+interface QuizHistory {
+  id: string;
+  title: string;
+  date: string;
+  score: number;
+  passingScore: number;
+  maxScore: number;
+  subject: string;
+  topic: string;
+  duration: string;
+  passed: boolean;
+}
 
 export default function QuizHistory() {
+  const queryClient = useQueryClient();
+
+  // Get the cached user data
+  const authUserResults = queryClient.getQueryData<Quiz>(["userResults"]);
+  const authUser = queryClient.getQueryData<User>(["authUser"]);
+  if (authUserResults && authUserResults.quiz) {
+    console.log("Authenticated User Results", authUserResults.quiz._id);
+    console.log("Authenticated User", authUser?._id);
+  } else {
+    console.log("No quiz data available");
+  }
+
+  const [quizHistory, setQuizHistory] = useState<QuizHistory[]>([]);
+
+  useEffect(() => {
+    if (authUser?.quizResults) {
+      setQuizHistory(
+        authUser.quizResults.map((result) => ({
+          id: result.quizId,
+          title: result.title,
+          date: new Date(result.completedAt).toISOString(), // Convert each date to a string
+          score: result.score, // Ensure each score is a number
+          passingScore: result.passingScore,
+          maxScore: result.maxScore,
+          subject: result.subject,
+          topic: result.topic,
+          duration: result.duration,
+          passed: result.passed, // Ensure each passed value is a boolean
+        }))
+      );
+    }
+  }, [authUser]);
+
+  console.log("Collected Quiz", quizHistory);
+
   return (
     <div className='space-y-4'>
-      {quizHistory.map((quiz) => (
+      {quizHistory?.map((quiz) => (
         <div
           key={quiz.id}
           className='bg-white shadow-sm p-4 border border-pink-100 rounded-lg'
@@ -72,7 +132,7 @@ export default function QuizHistory() {
               </span>
               <span className='flex items-center'>
                 <Clock className='mr-1 w-3 h-3' />
-                {quiz.duration}
+                {quiz.duration} minutes
               </span>
             </div>
           </div>

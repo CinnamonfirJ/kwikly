@@ -6,11 +6,32 @@ import Link from "next/link";
 import { use } from "react";
 import { ChevronLeft, Clock, CheckCircle, XCircle } from "lucide-react";
 import Image from "next/image";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRank } from "@/context/RankContext";
+import axios from "axios";
 
 // This would normally come from your MongoDB database
 // For demo purposes, we're using static data
+
+interface QuizResult {
+  quizId: number;
+  score: number;
+  passed: boolean;
+  completedAt: Date;
+}
+
+type SaveQuizResultRequest = {
+  userId: string;
+  quizId: string;
+  score: number;
+  passed: boolean;
+  title: string;
+  passingScore: number;
+  maxScore: number;
+  subject: string;
+  topic: string;
+  duration: string;
+};
 
 interface User {
   _id: string;
@@ -20,7 +41,7 @@ interface User {
   rank: string;
   level: number;
   xp: number;
-  // quizResults: any[]; // Replace with a proper type if needed
+  quizResults: QuizResult[]; // Replace with a proper type if needed
   createdAt: string;
   updatedAt: string;
   __v: number;
@@ -88,6 +109,7 @@ export default function QuizSession({
   const router = useRouter();
   const unwrappedParams = use(params); // Unwrap the params Promise
   const { code } = unwrappedParams;
+  const queryClient = useQueryClient();
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<
@@ -184,9 +206,67 @@ export default function QuizSession({
     }
   };
 
+  const saveQuizResult = async ({
+    userId,
+    quizId,
+    score,
+    passed,
+    title,
+    passingScore,
+    maxScore,
+    subject,
+    topic,
+    duration,
+  }: SaveQuizResultRequest) => {
+    try {
+      const res = await axios.post("/api/user/save", {
+        userId,
+        quizId,
+        score,
+        passed,
+        title,
+        passingScore,
+        maxScore,
+        subject,
+        topic,
+        duration,
+      });
+
+      const data = res.data;
+      if (!data) {
+        throw new Error(data.message || "Failed to save results");
+      }
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const { mutate: saveQuizMutate } = useMutation({
+    mutationFn: saveQuizResult,
+    // onMutate: () => setIsPending(true),
+    // onError: (error: Error) => {
+    //   setIsError(true);
+    //   setError(error);
+    //   setIsPending(false);
+    // },
+    onSuccess: () => {
+      // setIsPending(false);
+      // queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      console.log("Saved Successful");
+    },
+  });
+
   // Submit quiz
   const submitQuiz = () => {
     if (!quiz) return;
+
+    // Get the cached user data
+    const authUser = queryClient.getQueryData<User>(["authUser"]);
+    console.log("Authenticated User", authUser?._id);
+    console.log("Quiz Id", quiz._id);
+
+    if (!authUser?._id) return;
 
     // Calculate score
     let totalPoints = 0;
@@ -205,13 +285,53 @@ export default function QuizSession({
     console.log("Passing Score:", quiz.passingScore);
     console.log("XP Reward:", quiz.xpReward);
 
+    // userId: 'userId123',
+    // quizId: 'quizId123',
+    // score: 85,
+    // passed: true,
+    // title: 'Math Quiz',
+    // passingScore: 50,
+    // maxScore: 100,
+    // subject: 'Math',
+    // topic: 'Algebra',
+    // duration: '20 minutes',
+
+    const userId = authUser._id;
+    const quizId = quiz._id;
+
     if (percentage >= quiz.passingScore) {
       // Use `percentage` instead of `score`
       console.log("User passed. Awarding full XP:", quiz.xpReward);
+      const scoreData = {
+        userId,
+        quizId,
+        score: percentage,
+        passed: true,
+        title: quiz.title,
+        passingScore: quiz.passingScore,
+        maxScore: quiz.maxScore,
+        subject: quiz.subject,
+        topic: quiz.topic,
+        duration: quiz.duration,
+      };
+      saveQuizMutate(scoreData);
       updateXPAndRank(quiz.xpReward);
     } else {
       const calculatedScore = Math.floor(quiz.xpReward * 0.25);
       console.log("User failed. Awarding partial XP:", calculatedScore);
+      const scoreData = {
+        userId,
+        quizId,
+        score: percentage,
+        passed: false,
+        title: quiz.title,
+        passingScore: quiz.passingScore,
+        maxScore: quiz.maxScore,
+        subject: quiz.subject,
+        topic: quiz.topic,
+        duration: quiz.duration,
+      };
+      saveQuizMutate(scoreData);
       updateXPAndRank(calculatedScore);
     }
 

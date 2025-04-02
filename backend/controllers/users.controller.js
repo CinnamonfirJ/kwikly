@@ -123,3 +123,88 @@ export const updateUserProfile = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
+
+export const saveQuizResult = async (req, res) => {
+  try {
+    const {
+      userId,
+      quizId,
+      score,
+      passed,
+      title,
+      passingScore,
+      maxScore,
+      subject,
+      topic,
+      duration,
+    } = req.body;
+
+    // Validate request data
+    if (
+      !userId ||
+      !quizId ||
+      score === undefined ||
+      passed === undefined ||
+      !title ||
+      passingScore === undefined ||
+      maxScore === undefined ||
+      !subject ||
+      !topic ||
+      !duration
+    ) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if the quiz was already completed
+    const existingQuiz = user.quizResults.find(
+      (result) => result.quizId === quizId
+    );
+
+    if (existingQuiz) {
+      console.log(
+        "User has already completed this quiz before. Updating score if needed..."
+      );
+
+      // Optionally update the score if it's higher
+      if (score > existingQuiz.score) {
+        existingQuiz.score = score;
+        existingQuiz.passed = passed;
+        existingQuiz.completedAt = new Date();
+      }
+
+      await user.save();
+      return res.status(200).json({
+        message: "Quiz result updated, quizzesCompleted remains unchanged.",
+      });
+    }
+
+    // If the quiz is new, push the quiz result to the quizResults array
+    user.quizResults.push({
+      quizId,
+      score,
+      passed,
+      title,
+      passingScore,
+      maxScore,
+      subject,
+      topic,
+      duration,
+    });
+
+    // Optionally increase quizzesCompleted if you need to track it
+    user.quizzesCompleted += 1;
+
+    await user.save();
+    return res
+      .status(201)
+      .json({ message: "Quiz result saved successfully.", user });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
