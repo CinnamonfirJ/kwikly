@@ -8,6 +8,7 @@ import Leaderboard from "../../components/leaderboard";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useRank } from "@/context/RankContext";
+// import { useParams } from "next/navigation";
 
 // Types for QuizResult and User
 interface QuizResult {
@@ -56,6 +57,10 @@ export default function Dashboard() {
   const [quizResults, setQuizResults] = useState<Quiz>();
   const { calculateNextLevelXP } = useRank();
 
+  // const { name } = useParams();
+
+  // console.log("Param name", name);
+
   const { data: userResults } = useQuery({
     queryKey: ["userResults"],
     queryFn: async () => {
@@ -87,7 +92,7 @@ export default function Dashboard() {
   const { data: userData } = useQuery({
     queryKey: ["authUser"],
     queryFn: async () => {
-      const res = await fetch("/api/auth/user");
+      const res = await fetch(`/api/user/profile/${name}`);
       const data = await res.json();
       return data;
     },
@@ -120,12 +125,6 @@ export default function Dashboard() {
           <div className='bg-white shadow-sm p-6 border border-pink-100 rounded-xl'>
             <div className='flex flex-row items-center gap-4 pb-4'>
               <div className='relative border-4 border-pink-100 rounded-full w-16 h-16 overflow-hidden'>
-                {/* <Image
-                  src={user?.profilePicture || "/placeholder.svg"}
-                  alt={user?.name || ""}
-                  fill
-                  className='object-cover'
-                /> */}
                 {user?.profilePicture ? (
                   <Image
                     src={user?.profilePicture || "/images/placeholder.png"}
@@ -190,7 +189,7 @@ export default function Dashboard() {
 
               <div className='pt-4'>
                 <Link
-                  href='/dashboard/profile'
+                  href={`/dashboard/settings/${user?.name}`}
                   className='inline-flex items-center font-medium text-pink-500 hover:text-pink-600 text-sm'
                 >
                   <User className='mr-1 w-4 h-4' />

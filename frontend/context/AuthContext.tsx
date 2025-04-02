@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToastContext } from "@/providers/toast-provider";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -34,6 +35,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isPending, setIsPending] = useState(false);
   const [isError, setIsError] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+  const toast = useToastContext();
 
   const queryClient = useQueryClient();
 
@@ -92,10 +95,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     onError: (error: Error) => {
       setIsError(true);
       setError(error);
+      toast.error(error.message);
       setIsPending(false);
     },
     onSuccess: () => {
       setIsPending(false);
+      toast.success("Logout Successful");
       console.log("Logout Successful", isAuthenticated);
     },
   });
@@ -135,9 +140,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     onError: (error: Error) => {
       setIsError(true);
       setError(error);
+      toast.error(error.message);
       setIsPending(false);
     },
     onSuccess: () => {
+      toast.success("Signup Successful");
       setIsPending(false);
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
       console.log("Login Successful", isAuthenticated);
@@ -175,10 +182,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     onError: (error: Error) => {
       setIsError(true);
       setError(error);
+      toast.error(error.message);
       setIsPending(false);
     },
     onSuccess: () => {
       setIsPending(false);
+      toast.success("Login Successful");
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
       console.log("Login Successful", isAuthenticated);
     },

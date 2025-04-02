@@ -296,7 +296,7 @@ export default function QuizSession({
       const scoreData = {
         userId,
         quizId,
-        score: percentage,
+        score: totalScore,
         passed: true,
         title: quiz.title,
         passingScore: quiz.passingScore,
@@ -313,7 +313,7 @@ export default function QuizSession({
       const scoreData = {
         userId,
         quizId,
-        score: percentage,
+        score: totalScore,
         passed: false,
         title: quiz.title,
         passingScore: quiz.passingScore,

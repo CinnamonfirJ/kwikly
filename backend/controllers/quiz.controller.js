@@ -42,7 +42,7 @@ export const getQuizById = async (req, res) => {
   const { quizId } = req.params;
 
   try {
-    const quiz = await Quiz.findById(quizId).populate({
+    const quiz = await Quiz.findById(quizId).sort({ createdAt: -1 }).populate({
       path: "createdBy",
       select: "-password",
     }); // Populate creator details

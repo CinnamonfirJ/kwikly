@@ -8,7 +8,13 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, LogIn, BookOpen } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
-// import { useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -16,19 +22,35 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const [user, setUser] = useState<User | null>(null); // Initialize with `null`
+
   const { login, error, isAuthenticated, isError, isPending } =
     useAuthContext();
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const { data: userData } = useQuery({
+    queryKey: ["authUser"],
+    queryFn: async () => {
+      const res = await fetch(`/api/user/profile/${name}`);
+      const data = await res.json();
+      return data;
+    },
+  });
+
   const callbackUrl =
-    searchParams?.get("callbackUrl") || "/dashboard/:username";
+    searchParams?.get("callbackUrl") || `/dashboard/${user?.name}`;
 
   // Redirect if already authenticated
   useEffect(() => {
+    if (userData) {
+      setUser(userData);
+    }
+
     if (isAuthenticated) {
       router.push(callbackUrl);
     }
-  }, [isAuthenticated, router, callbackUrl]);
+  }, [isAuthenticated, router, callbackUrl, userData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

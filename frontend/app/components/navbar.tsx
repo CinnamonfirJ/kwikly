@@ -102,7 +102,7 @@ export default function Navbar() {
                 My Quizzes
               </Link>
               <Link
-                href='/dashboard/:username'
+                href={`/dashboard/${user?.name}`}
                 className='font-medium text-gray-600 hover:text-pink-500 text-sm transition-colors'
               >
                 Dashboard
@@ -150,7 +150,8 @@ export default function Navbar() {
                   <ul className='py-2'>
                     <li>
                       <Link
-                        href='/dashboard'
+                        href={`/dashboard/${user?.name}`}
+                        onClick={() => setDropdownOpen(!dropdownOpen)}
                         className='block hover:bg-gray-100 px-4 py-2 text-gray-700 text-sm'
                       >
                         <LayoutDashboard className='inline-block mr-2 w-4 h-4' />{" "}
@@ -159,7 +160,8 @@ export default function Navbar() {
                     </li>
                     <li>
                       <Link
-                        href='/dashboard/profile'
+                        href={`/dashboard/profile/${user?.name}`}
+                        onClick={() => setDropdownOpen(!dropdownOpen)}
                         className='block hover:bg-gray-100 px-4 py-2 text-gray-700 text-sm'
                       >
                         <User className='inline-block mr-2 w-4 h-4' /> Profile
@@ -167,7 +169,8 @@ export default function Navbar() {
                     </li>
                     <li>
                       <Link
-                        href='/dashboard/settings'
+                        href={`/dashboard/settings/${user?.name}`}
+                        onClick={() => setDropdownOpen(!dropdownOpen)}
                         className='block hover:bg-gray-100 px-4 py-2 text-gray-700 text-sm'
                       >
                         <Settings className='inline-block mr-2 w-4 h-4' />{" "}
