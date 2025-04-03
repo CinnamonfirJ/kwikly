@@ -50,6 +50,16 @@ Points: 1`;
     <div className='space-y-6'>
       <h2 className='font-bold text-xl'>Quiz Import Format Examples</h2>
 
+      <div className='border border-gray-200 rounded-lg overflow-hidden'>
+        <div className='flex items-center bg-gray-50 p-3 border-gray-200 border-b'>
+          <FileText className='mr-2 w-5 h-5 text-pink-500' />
+          <h3 className='font-medium'>Text Example</h3>
+        </div>
+        <pre className='bg-gray-50 p-4 overflow-x-auto text-gray-800 text-sm'>
+          {textExample}
+        </pre>
+      </div>
+
       <div className='space-y-4'>
         <div className='border border-gray-200 rounded-lg overflow-hidden'>
           <div className='flex items-center bg-gray-50 p-3 border-gray-200 border-b'>
@@ -68,16 +78,6 @@ Points: 1`;
           </div>
           <pre className='bg-gray-50 p-4 overflow-x-auto text-gray-800 text-sm'>
             {jsonExample}
-          </pre>
-        </div>
-
-        <div className='border border-gray-200 rounded-lg overflow-hidden'>
-          <div className='flex items-center bg-gray-50 p-3 border-gray-200 border-b'>
-            <FileText className='mr-2 w-5 h-5 text-pink-500' />
-            <h3 className='font-medium'>Text Example</h3>
-          </div>
-          <pre className='bg-gray-50 p-4 overflow-x-auto text-gray-800 text-sm'>
-            {textExample}
           </pre>
         </div>
       </div>

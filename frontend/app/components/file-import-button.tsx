@@ -5,18 +5,26 @@ import type React from "react";
 import { useState, useRef } from "react";
 import { Upload, FileText, AlertCircle } from "lucide-react";
 import { useToastContext } from "@/providers/toast-provider";
+import ConfirmationModal from "./confirmation-modal";
 
 interface FileImportButtonProps {
-  onImport: (data: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onImport: (data: any) => void; // Ignore type for now
 }
 
 export default function FileImportButton({ onImport }: FileImportButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [formatModalOpen, setFormatModalOpen] = useState(false);
   const toast = useToastContext();
 
   const handleButtonClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleOpenFileImportExample = () => {
+    setFormatModalOpen(false);
+    window.open("/import-example", "_blank", "noopener,noreferrer");
   };
 
   const parseCSV = (text: string) => {
@@ -70,6 +78,7 @@ export default function FileImportButton({ onImport }: FileImportButtonProps) {
 
         const cells = lines[i].split(",").map((cell) => cell.trim());
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const question: Record<string, any> = {};
 
         headers.forEach((header, index) => {
@@ -79,6 +88,7 @@ export default function FileImportButton({ onImport }: FileImportButtonProps) {
               try {
                 question[header] = JSON.parse(cells[index].replace(/'/g, '"'));
               } catch (e) {
+                toast.error(String(e));
                 question[header] = [cells[index]];
               }
             } else if (header === "points") {
@@ -133,6 +143,7 @@ export default function FileImportButton({ onImport }: FileImportButtonProps) {
 
     // Check if there are questions in the format "Q: question text, A: option1, B: option2, C: option3, Correct: A"
     const questions = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let currentQuestion: any = null;
 
     for (let i = 4; i < lines.length; i++) {
@@ -200,10 +211,10 @@ export default function FileImportButton({ onImport }: FileImportButtonProps) {
 
       onImport(data);
       toast.success(`Successfully imported quiz from ${file.name}`);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error parsing file:", error);
       toast.error(
-        `Error importing file: ${error.message || "Invalid file format"}`
+        `Error importing file: ${String(error) || "Invalid file format"}`
       );
     } finally {
       setIsLoading(false);
@@ -267,7 +278,10 @@ export default function FileImportButton({ onImport }: FileImportButtonProps) {
 
       <div className='hidden md:block bg-blue-50 mt-4 p-3 border border-blue-200 rounded-lg text-blue-800 text-sm'>
         <div className='flex items-start gap-2'>
-          <AlertCircle className='flex-shrink-0 mt-0.5 w-5 h-5 text-blue-500' />
+          <AlertCircle
+            onClick={() => setFormatModalOpen(true)}
+            className='flex-shrink-0 mt-0.5 w-5 h-5 text-blue-500 cursor-pointer'
+          />
           <div>
             <p className='mb-1 font-medium'>Import Format Tips:</p>
             <ul className='space-y-1 ml-1 list-disc list-inside'>
@@ -287,6 +301,19 @@ export default function FileImportButton({ onImport }: FileImportButtonProps) {
               </li>
             </ul>
           </div>
+
+          {/* Examples Confirmation Modal */}
+          <ConfirmationModal
+            isOpen={formatModalOpen}
+            onClose={() => setFormatModalOpen(false)}
+            onConfirm={handleOpenFileImportExample}
+            title='Import Example'
+            description="Guess what? You can magically import your quizzes with just a CSV, JSON, or text file! ✨ No manual typing needed—just format it right, and boom, you're all set! Want to see some examples? Click below to check them out!"
+            confirmText='See Examples'
+            cancelText='Cancel'
+            type='info'
+            isLoading={isLoading}
+          />
         </div>
       </div>
     </div>

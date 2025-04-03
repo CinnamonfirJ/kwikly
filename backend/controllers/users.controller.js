@@ -209,3 +209,136 @@ export const saveQuizResult = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const getUserQuizProgress = async (req, res) => {
+  const { userId, quizId } = req.params;
+
+  // Validate required parameters
+  if (!userId || !quizId) {
+    return res
+      .status(400)
+      .json({ message: "Missing required parameters: userId or quizId!" });
+  }
+
+  try {
+    // Find the user by ID
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found!" });
+    }
+
+    // Find the progress for the specific quiz
+    const progress = user.progress.find((p) => p.quizId === quizId);
+
+    if (!progress) {
+      return res
+        .status(404)
+        .json({ message: "No progress found for this quiz!" });
+    }
+
+    // Respond with the progress
+    res.status(200).json({
+      message: "Quiz progress retrieved successfully!",
+      progress,
+    });
+  } catch (error) {
+    console.error("Error in Get User Quiz Progress Controller:", error.message);
+    res
+      .status(500)
+      .json({ message: "Internal Server Error!", error: error.message });
+  }
+};
+
+export const saveUserQuizProgress = async (req, res) => {
+  const { userId } = req.params; // Extract userId from the request parameters
+  const { quizId, currentQuestion, selectedAnswers, timeLeft } = req.body; // Extract progress data from the request body
+
+  // Validate required fields
+  if (!quizId || currentQuestion === undefined || !timeLeft) {
+    return res.status(400).json({ message: "Missing required fields!" });
+  }
+
+  try {
+    // Find the user by ID
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found!" });
+    }
+
+    // Check if progress for the quiz already exists
+    const progressIndex = user.progress.findIndex((p) => p.quizId === quizId);
+
+    if (progressIndex !== -1) {
+      // Update existing progress
+      user.progress[progressIndex].currentQuestion = currentQuestion;
+      user.progress[progressIndex].selectedAnswers = selectedAnswers;
+      user.progress[progressIndex].timeLeft = timeLeft;
+      user.progress[progressIndex].updatedAt = new Date();
+    } else {
+      // Add new progress if it doesn't exist
+      user.progress.push({
+        quizId,
+        userId,
+        currentQuestion,
+        selectedAnswers,
+        timeLeft,
+        updatedAt: new Date(),
+      });
+    }
+
+    // Save the updated user document
+    await user.save();
+
+    // Respond with the updated progress
+    res.status(200).json({
+      message: "Progress saved successfully!",
+      progress:
+        progressIndex !== -1
+          ? user.progress[progressIndex]
+          : user.progress[user.progress.length - 1],
+    });
+  } catch (error) {
+    console.error(
+      "Error in Save User Quiz Progress Controller:",
+      error.message
+    );
+    res.status(500).json({ message: "Internal Server Error!" });
+  }
+};
+
+export const deleteUserQuizProgress = async (req, res) => {
+  const { userId, quizId } = req.params;
+
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found!" });
+    }
+
+    // Find the progress index
+    const progressIndex = user.progress.findIndex((p) => p.quizId === quizId);
+
+    if (progressIndex === -1) {
+      return res
+        .status(404)
+        .json({ message: "No progress found for this quiz!" });
+    }
+
+    // Remove the progress
+    user.progress.splice(progressIndex, 1);
+    await user.save();
+
+    res.status(200).json({
+      message: "Progress deleted successfully!",
+    });
+  } catch (error) {
+    console.error(
+      "Error in Delete User Quiz Progress Controller:",
+      error.message
+    );
+    res.status(500).json({ message: "Internal Server Error!" });
+  }
+};

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { use } from "react";
@@ -9,6 +9,7 @@ import Image from "next/image";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRank } from "@/context/RankContext";
 import axios from "axios";
+import { useToastContext } from "@/providers/toast-provider";
 
 // This would normally come from your MongoDB database
 // For demo purposes, we're using static data
@@ -118,6 +119,7 @@ export default function QuizSession({
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [score, setScore] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
+  const toast = useToastContext();
 
   const { updateXPAndRank } = useRank();
 
@@ -151,12 +153,13 @@ export default function QuizSession({
   const isCreator = quiz?.createdBy.name === quiz?.createdBy.name;
 
   // Set initial time based on quiz duration
-  const [timeLeft, setTimeLeft] = useState(() => {
-    if (quiz) {
-      return durationToSeconds(quiz.duration);
+  const [timeLeft, setTimeLeft] = useState(1800); // Default to 30 minutes
+
+  useEffect(() => {
+    if (quiz?.duration) {
+      setTimeLeft(durationToSeconds(quiz?.duration || ""));
     }
-    return 1800; // Default to 30 minutes if quiz not found
-  });
+  }, [quiz?.duration]); // Runs when quiz.duration updates
 
   // Timer effect
   useEffect(() => {
@@ -207,6 +210,196 @@ export default function QuizSession({
     }
   };
 
+  const authUser = queryClient.getQueryData<User>(["authUser"]);
+
+  // Refs to store the latest state values
+  const currentQuestionRef = useRef(currentQuestion);
+  const selectedAnswersRef = useRef(selectedAnswers);
+
+  const timeLeftRef = useRef(durationToSeconds(quiz?.duration || ""));
+
+  // Update refs whenever the state changes
+  useEffect(() => {
+    currentQuestionRef.current = currentQuestion;
+  }, [currentQuestion]);
+
+  useEffect(() => {
+    selectedAnswersRef.current = selectedAnswers;
+  }, [selectedAnswers]);
+
+  useEffect(() => {
+    timeLeftRef.current = timeLeft;
+  }, [timeLeft]);
+
+  // Save progress to localStorage
+  const saveProgressToLocal = () => {
+    const progress = {
+      currentQuestion: currentQuestionRef.current,
+      selectedAnswers: selectedAnswersRef.current,
+      timeLeft: timeLeftRef.current,
+    };
+    localStorage.setItem(`quizProgress-${quiz?._id}`, JSON.stringify(progress));
+  };
+
+  // Restore progress from localStorage
+  const restoreProgressFromLocal = () => {
+    const savedProgress = localStorage.getItem(`quizProgress-${quiz?._id}`);
+    if (!savedProgress) {
+      console.log("No saved progress found in localStorage.");
+      return;
+    }
+
+    try {
+      const { currentQuestion, selectedAnswers, timeLeft } =
+        JSON.parse(savedProgress);
+      setCurrentQuestion(currentQuestion || 0);
+      setSelectedAnswers(selectedAnswers || {});
+      setTimeLeft(timeLeft || durationToSeconds(quiz?.duration || ""));
+      console.log("Restored progress from localStorage:", {
+        currentQuestion,
+        selectedAnswers,
+        timeLeft,
+      });
+    } catch (error) {
+      console.error("Failed to parse saved progress from localStorage:", error);
+    }
+  };
+
+  // Save progress to backend
+  const saveProgressToBackend = async () => {
+    console.log("User ID:", authUser?._id);
+    try {
+      const progress = {
+        quizId: quiz?._id,
+        userId: authUser?._id,
+        currentQuestion: currentQuestionRef.current,
+        selectedAnswers: selectedAnswersRef.current,
+        timeLeft: timeLeftRef.current,
+      };
+      await axios.post(`/api/user/${authUser?._id}/progress`, progress);
+      console.log("Progress saved to backend successfully.");
+    } catch (error) {
+      console.error("Failed to save progress to backend:", error);
+    }
+  };
+
+  // Restore progress from backend
+  const restoreProgressFromBackend = async () => {
+    if (!authUser?._id || !quiz?._id) {
+      console.log(
+        "Cannot restore progress from backend: Missing authUser or quiz data."
+      );
+      return;
+    }
+
+    try {
+      const res = await axios.get(
+        `/api/user/${authUser?._id}/progress/${quiz?._id}`
+      );
+      if (!res.data || !res.data.progress) {
+        console.log("No saved progress found on the backend.");
+        return;
+      }
+
+      const { currentQuestion, selectedAnswers, timeLeft } = res.data.progress;
+      setCurrentQuestion(currentQuestion || 0);
+      setSelectedAnswers(selectedAnswers || {});
+      setTimeLeft(timeLeft || durationToSeconds(quiz?.duration || ""));
+      console.log("Restored progress from backend:", {
+        currentQuestion,
+        selectedAnswers,
+        timeLeft,
+      });
+    } catch (error) {
+      console.error("Failed to restore progress from backend:", error);
+    }
+  };
+
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Save progress periodically
+  useEffect(() => {
+    if (!authUser?._id || !quiz?._id) {
+      console.log("Skipping periodic saving: Missing authUser or quiz data.");
+      return;
+    }
+
+    console.log("Setting up interval for saving progress...");
+    intervalRef.current = setInterval(() => {
+      console.log("Saving progress...");
+      saveProgressToLocal();
+      saveProgressToBackend();
+    }, 30000); // Save every 30 seconds
+
+    return () => {
+      if (intervalRef.current) {
+        console.log("Clearing interval for saving progress...");
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [authUser?._id, quiz?._id]);
+
+  // Restore progress on page load
+  useEffect(() => {
+    if (authUser?._id && quiz?._id) {
+      console.log("Restoring progress from localStorage and backend...");
+      restoreProgressFromLocal();
+      restoreProgressFromBackend();
+    } else {
+      console.log("authUser or quiz is not available yet. Skipping restore.");
+    }
+  }, [authUser, quiz]);
+
+  // Refs to store authUser and quiz
+  const authUserRef = useRef(authUser);
+  const quizRef = useRef(quiz);
+
+  // Update refs whenever authUser or quiz changes
+  useEffect(() => {
+    authUserRef.current = authUser;
+  }, [authUser]);
+
+  useEffect(() => {
+    quizRef.current = quiz;
+  }, [quiz]);
+
+  const deleteProgressFromLocal = (quizId: string) => {
+    if (!quizId) {
+      console.log("Cannot delete progress locally: Missing quiz ID.");
+      return;
+    }
+
+    localStorage.removeItem(`quizProgress-${quizId}`);
+    console.log("Progress deleted from localStorage successfully.");
+  };
+
+  const deleteProgressFromBackend = async (userId: string, quizId: string) => {
+    try {
+      await axios.delete(`/api/user/${userId}/progress/${quizId}`);
+      console.log("Progress deleted from backend successfully.");
+    } catch (error) {
+      console.error("Failed to delete progress from backend:", error);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      console.log("User is leaving the quiz session. Deleting progress...");
+
+      const currentAuthUser = authUserRef.current;
+      const currentQuiz = quizRef.current;
+
+      if (!currentAuthUser?._id || !currentQuiz?._id) {
+        console.log("Cannot delete progress: Missing authUser or quiz data.");
+        return;
+      }
+
+      deleteProgressFromLocal(currentQuiz._id);
+
+      deleteProgressFromBackend(currentAuthUser._id, currentQuiz._id);
+    };
+  }, []);
+
   const saveQuizResult = async ({
     userId,
     quizId,
@@ -239,21 +432,20 @@ export default function QuizSession({
       }
       return data;
     } catch (error) {
+      toast.error(String(error) || "No");
       throw error;
     }
   };
 
   const { mutate: saveQuizMutate } = useMutation({
     mutationFn: saveQuizResult,
-    // onMutate: () => setIsPending(true),
-    // onError: (error: Error) => {
-    //   setIsError(true);
-    //   setError(error);
-    //   setIsPending(false);
-    // },
     onSuccess: () => {
-      // setIsPending(false);
-      // queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      setQuizCompleted(true);
+      deleteProgressFromLocal(quiz?._id || "");
+      // Delete progress after submission
+      deleteProgressFromBackend(authUser?._id || "", quiz?._id || "");
+      console.log("Quiz submitted. Progress deleted.");
+      toast.success("Quiz results saved successfully!");
       console.log("Saved Successful");
     },
   });
@@ -271,9 +463,11 @@ export default function QuizSession({
 
     // Calculate score
     let totalPoints = 0;
+    let savedScore = 0;
     questions.forEach((question) => {
       if (selectedAnswers[question.id] === question.correctAnswer) {
         totalPoints += question.points;
+        savedScore = totalPoints;
       }
     });
 
@@ -296,7 +490,7 @@ export default function QuizSession({
       const scoreData = {
         userId,
         quizId,
-        score: totalScore,
+        score: savedScore,
         passed: true,
         title: quiz.title,
         passingScore: quiz.passingScore,
@@ -313,7 +507,7 @@ export default function QuizSession({
       const scoreData = {
         userId,
         quizId,
-        score: totalScore,
+        score: savedScore,
         passed: false,
         title: quiz.title,
         passingScore: quiz.passingScore,
@@ -325,11 +519,6 @@ export default function QuizSession({
       saveQuizMutate(scoreData);
       updateXPAndRank(calculatedScore);
     }
-
-    setQuizCompleted(true);
-
-    // In a real app, you would save the quiz results to the database here
-    // and update the user's XP if they passed
   };
 
   const getInitials = (name: string) =>
@@ -537,45 +726,6 @@ export default function QuizSession({
                   </div>
                 </div>
               </div>
-
-              {/* <div className='space-y-4'>
-                <div className='space-y-2'>
-                  <div className='flex justify-between items-center'>
-                    <div className='flex items-center'>
-                      <Award className='mr-2 w-5 h-5 text-pink-500' />
-                      <span className='font-medium'>Level {user.level}</span>
-                    </div>
-                    <span className='text-gray-500 text-sm'>
-                      {user.xp}/{user.xpToNextLevel} XP
-                    </span>
-                  </div>
-                  <div className='bg-pink-100 rounded-full w-full h-2 overflow-hidden'>
-                    <div
-                      className='bg-pink-500 rounded-full h-full'
-                      style={{
-                        width: `${(user.xp / user.xpToNextLevel) * 100}%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className='gap-4 grid grid-cols-2 pt-4'>
-                  <div className='flex flex-col justify-center items-center bg-pink-50 p-4 rounded-lg'>
-                    <BookOpen className='mb-2 w-6 h-6 text-pink-500' />
-                    <span className='font-bold text-xl'>
-                      {user.completedQuizzes}
-                    </span>
-                    <span className='text-gray-500 text-xs'>
-                      Quizzes Completed
-                    </span>
-                  </div>
-                  <div className='flex flex-col justify-center items-center bg-pink-50 p-4 rounded-lg'>
-                    <Trophy className='mb-2 w-6 h-6 text-pink-500' />
-                    <span className='font-bold text-xl'>3</span>
-                    <span className='text-gray-500 text-xs'>Achievements</span>
-                  </div>
-                </div>
-              </div> */}
             </div>
           </div>
         </div>

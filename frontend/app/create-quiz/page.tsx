@@ -41,6 +41,7 @@ export default function CreateQuiz() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [activeTab, setActiveTab] = useState("basic");
   const [isPublic, setIsPublic] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Use the create quiz mutation
   const createQuizMutation = useCreateQuiz();
@@ -173,6 +174,7 @@ export default function CreateQuiz() {
 
   // Handle imported quiz data
   const handleImportedQuiz = (data: ImportedQuizData) => {
+    setIsLoading(true);
     // Set basic quiz info
     if (data.title) setQuizTitle(data.title);
     if (data.subject) setSubject(data.subject);
@@ -204,6 +206,7 @@ export default function CreateQuiz() {
       }));
 
       setQuestions(importedQuestions);
+      setIsLoading(false);
 
       // Switch to questions tab if questions were imported
       if (importedQuestions.length > 0) {
@@ -211,6 +214,16 @@ export default function CreateQuiz() {
       }
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className='mx-auto px-4 md:px-6 py-8 md:py-12 max-w-6xl container'>
+        <div className='flex justify-center items-center h-64'>
+          <div className='border-pink-500 border-t-2 border-b-2 rounded-full w-12 h-12 animate-spin'></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='mx-auto px-4 md:px-6 py-8 md:py-12 max-w-6xl container'>
@@ -228,8 +241,6 @@ export default function CreateQuiz() {
             </div>
 
             <div className='flex sm:flex-row flex-col items-center gap-3'>
-              <FileImportButton onImport={handleImportedQuiz} />
-
               <div className='bg-pink-50 p-3 rounded-lg'>
                 <div className='flex items-center gap-2'>
                   <button
@@ -316,6 +327,13 @@ export default function CreateQuiz() {
                   <label className='block font-medium text-gray-700 text-sm'>
                     Subject
                   </label>
+                  {/* <input
+                    type='text'
+                    className='p-2 border border-gray-300 focus:border-pink-500 rounded-lg focus:outline-none focus:ring-pink-500 w-full'
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder='Enter topic'
+                  /> */}
                   <select
                     className='p-2 border border-gray-300 focus:border-pink-500 rounded-lg focus:outline-none focus:ring-pink-500 w-full'
                     value={subject}
@@ -353,12 +371,12 @@ export default function CreateQuiz() {
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
                   >
-                    <option value='10'>10 minutes</option>
-                    <option value='15'>15 minutes</option>
-                    <option value='20'>20 minutes</option>
-                    <option value='30'>30 minutes</option>
-                    <option value='45'>45 minutes</option>
-                    <option value='60'>60 minutes</option>
+                    <option value='10 minutes'>10 minutes</option>
+                    <option value='15 minutes'>15 minutes</option>
+                    <option value='20 minutes'>20 minutes</option>
+                    <option value='30 minutes'>30 minutes</option>
+                    <option value='45 minutes'>45 minutes</option>
+                    <option value='60 minutes'>60 minutes</option>
                   </select>
                 </div>
               </div>
@@ -470,6 +488,8 @@ export default function CreateQuiz() {
               </div>
             </div>
           )}
+
+          <FileImportButton onImport={handleImportedQuiz} />
         </div>
       </div>
     </div>

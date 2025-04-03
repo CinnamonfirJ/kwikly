@@ -13,6 +13,7 @@ interface ConfirmationModalProps {
   onConfirm: () => void;
   title: string;
   description: string;
+  component?: React.ReactNode;
   confirmText?: string;
   cancelText?: string;
   type?: ModalType;
@@ -26,6 +27,7 @@ export default function ConfirmationModal({
   onConfirm,
   title,
   description,
+  component,
   confirmText = "Confirm",
   cancelText = "Cancel",
   type = "confirm",
@@ -208,6 +210,7 @@ export default function ConfirmationModal({
               {title}
             </h2>
             <p className='mx-auto mb-8 max-w-sm text-gray-600'>{description}</p>
+            <div>{component}</div>
           </div>
 
           {/* Buttons */}

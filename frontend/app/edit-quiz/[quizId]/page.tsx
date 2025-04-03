@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useParams } from "next/navigation";
 import {
   DndContext,
   closestCenter,
@@ -8,7 +9,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
+  type DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -16,22 +17,83 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import { Plus, Save, Globe, Lock } from "lucide-react";
+import { Plus, Save, Globe, Lock, ArrowLeft } from "lucide-react";
 import SortableQuestion from "@/app/components/sortable-question";
-import { useCreateQuiz, type QuizData } from "@/hooks/use-create-quiz";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { useToastContext } from "@/providers/toast-provider";
+import { quizApi } from "@/lib/api";
 import FileImportButton from "@/app/components/file-import-button";
+import Link from "next/link";
+import { QuizData } from "@/hooks/use-create-quiz";
 
-// Define the question type
+// Define the types
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  profilePicture: string;
+  rank: string;
+  favouriteTopic: string;
+  level: number;
+  xp: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 type Question = {
   id: string;
   questionText: string;
   options: string[];
   correctAnswer: string;
   points: number;
+  _id?: string;
 };
 
-export default function CreateQuiz() {
+interface Quiz {
+  message: string;
+  quiz: {
+    _id: string;
+    title: string;
+    instruction: string;
+    passingScore: number;
+    maxScore: number;
+    xpReward: number;
+    subject: string;
+    topic: string;
+    duration: string;
+    code: string;
+    createdBy: User;
+    isPublic: boolean;
+    questions: Question[];
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+  };
+}
+
+interface ImportedQuizData {
+  title?: string;
+  subject?: string;
+  topic?: string;
+  instruction?: string;
+  passingScore?: number | string;
+  duration?: string;
+  questions?: Array<{
+    questionText?: string;
+    options?: string[];
+    correctAnswer?: string;
+    points?: number;
+  }>;
+}
+
+export default function EditQuiz() {
+  const router = useRouter();
+  const params = useParams();
+  const quizId = params.quizId as string;
+  const queryClient = useQueryClient();
+  const toast = useToastContext();
+
+  // Form state
   const [quizTitle, setQuizTitle] = useState("");
   const [quizInstructions, setQuizInstructions] = useState("");
   const [subject, setSubject] = useState("");
@@ -41,17 +103,83 @@ export default function CreateQuiz() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [activeTab, setActiveTab] = useState("basic");
   const [isPublic, setIsPublic] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [code, setCode] = useState("");
 
-  // Use the create quiz mutation
-  const createQuizMutation = useCreateQuiz();
-  // Use toast context for notifications
-  const toast = useToastContext();
+  // Fetch quiz data if not in cache
+  const fetchQuizData = useCallback(async () => {
+    try {
+      const response = await quizApi.getQuizById(quizId);
+      const quiz = response.quiz;
+
+      // Populate form with quiz data
+      setQuizTitle(quiz.title);
+      setQuizInstructions(quiz.instruction);
+      setSubject(quiz.subject);
+      setTopic(quiz.topic);
+      setPassingScore(quiz.passingScore);
+      setDuration(quiz.duration);
+      setIsPublic(quiz.isPublic);
+      setCode(quiz.code);
+
+      // Transform questions to match the expected format
+      const formattedQuestions = quiz.questions.map((q: Question) => ({
+        id: q.id.toString(),
+        questionText: q.questionText,
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        points: q.points,
+        _id: q._id,
+      }));
+
+      setQuestions(formattedQuestions);
+    } catch (error: unknown) {
+      toast.error("Failed to fetch quiz data");
+      console.error("Error fetching quiz:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [quizId, toast]);
+
+  // Get quiz data from cache
+  useEffect(() => {
+    const quizData = queryClient.getQueryData<Quiz>(["userResults"]);
+
+    if (quizData && quizData.quiz) {
+      const quiz = quizData.quiz;
+
+      // Populate form with quiz data
+      setQuizTitle(quiz.title);
+      setQuizInstructions(quiz.instruction);
+      setSubject(quiz.subject);
+      setTopic(quiz.topic);
+      setPassingScore(quiz.passingScore);
+      setDuration(quiz.duration);
+      setIsPublic(quiz.isPublic);
+      setCode(quiz.code);
+
+      // Transform questions to match the expected format
+      const formattedQuestions = quiz.questions.map((q) => ({
+        id: q.id.toString(),
+        questionText: q.questionText,
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        points: q.points,
+        _id: q._id,
+      }));
+
+      setQuestions(formattedQuestions);
+      setIsLoading(false);
+    } else {
+      // If quiz data is not in cache, fetch it from the API
+      fetchQuizData();
+    }
+  }, [quizId, queryClient, fetchQuizData]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      // Increase the activation constraint threshold for better touch control
       activationConstraint: {
-        distance: 8, // 8px movement required before drag starts
+        distance: 8,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -65,7 +193,7 @@ export default function CreateQuiz() {
       questionText: "New Question",
       options: ["Option 1", "Option 2", "Option 3", "Option 4"],
       correctAnswer: "Option 1",
-      points: 1, // Default to 1 point
+      points: 1,
     };
     setQuestions([...questions, newQuestion]);
   };
@@ -81,10 +209,10 @@ export default function CreateQuiz() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (active.id !== over?.id) {
+    if (over && active.id !== over.id) {
       setQuestions((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over?.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
 
         const newItems = [...items];
         const [removed] = newItems.splice(oldIndex, 1);
@@ -116,11 +244,38 @@ export default function CreateQuiz() {
     return null; // No validation errors
   };
 
+  // Update quiz mutation
+  const updateQuizMutation = useMutation({
+    mutationFn: (quizData: QuizData) => {
+      return quizApi.updateQuiz(quizId, quizData);
+    },
+    onSuccess: () => {
+      toast.success("Quiz updated successfully!");
+      queryClient.invalidateQueries({ queryKey: ["userResults"] });
+      router.push("/my-quizzes");
+    },
+    onError: (error: unknown) => {
+      let errorMessage = "Failed to update quiz";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      if (typeof error === "object" && error !== null && "response" in error) {
+        const axiosError = error as {
+          response?: { data?: { message?: string } };
+        };
+        errorMessage = axiosError.response?.data?.message || errorMessage;
+      }
+
+      toast.error(errorMessage);
+    },
+  });
+
   const saveQuiz = () => {
     // Validate the form
     const validationError = validateForm();
     if (validationError) {
-      // Use toast instead of alert
       toast.error(validationError);
       return;
     }
@@ -130,7 +285,7 @@ export default function CreateQuiz() {
     const xpReward = Math.floor(maxScore * 0.5);
 
     // Prepare quiz data for submission
-    const quizData: QuizData = {
+    const quizData = {
       title: quizTitle,
       instruction: quizInstructions,
       passingScore,
@@ -140,36 +295,23 @@ export default function CreateQuiz() {
       topic,
       duration,
       isPublic,
+      code,
       questions: questions.map((q, index) => ({
         id: index + 1,
         questionText: q.questionText,
         options: q.options,
         correctAnswer: q.correctAnswer,
         points: q.points,
+        _id: q._id, // Include the original _id if it exists
       })),
     };
 
     // Show a toast notification when starting the submission
-    toast.info("Saving quiz...");
+    toast.info("Updating quiz...");
 
     // Submit the quiz using the mutation
-    createQuizMutation.mutate(quizData);
+    updateQuizMutation.mutate(quizData);
   };
-
-  interface ImportedQuizData {
-    title?: string;
-    subject?: string;
-    topic?: string;
-    instruction?: string;
-    passingScore?: number | string;
-    duration?: string;
-    questions?: {
-      questionText?: string;
-      options?: string[];
-      correctAnswer?: string;
-      points?: number;
-    }[];
-  }
 
   // Handle imported quiz data
   const handleImportedQuiz = (data: ImportedQuizData) => {
@@ -180,7 +322,6 @@ export default function CreateQuiz() {
     if (data.instruction) setQuizInstructions(data.instruction);
     if (data.passingScore) setPassingScore(Number(data.passingScore));
     if (data.duration) {
-      // Extract just the number from duration if it contains "minutes"
       const durationMatch = data.duration.match(/(\d+)/);
       if (durationMatch) {
         setDuration(durationMatch[1]);
@@ -212,18 +353,35 @@ export default function CreateQuiz() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className='mx-auto px-4 md:px-6 py-8 md:py-12 max-w-6xl container'>
+        <div className='flex justify-center items-center h-64'>
+          <div className='border-pink-500 border-t-2 border-b-2 rounded-full w-12 h-12 animate-spin'></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className='mx-auto px-4 md:px-6 py-8 md:py-12 max-w-6xl container'>
+      <div className='mb-6'>
+        <Link
+          href='/my-quizzes'
+          className='inline-flex items-center text-pink-500 hover:text-pink-600 transition-colors'
+        >
+          <ArrowLeft className='mr-2 w-4 h-4' />
+          Back to My Quizzes
+        </Link>
+      </div>
+
       <div className='bg-white shadow-md border border-pink-100 rounded-xl overflow-hidden'>
         <div className='p-6 border-pink-100 border-b'>
           <div className='flex md:flex-row flex-col justify-between md:items-center gap-4'>
             <div>
-              <h2 className='font-bold text-gray-800 text-2xl'>
-                Create a New Quiz
-              </h2>
+              <h2 className='font-bold text-gray-800 text-2xl'>Edit Quiz</h2>
               <p className='mt-1 text-gray-500'>
-                Design your quiz with drag and drop functionality to reorder
-                questions.
+                Update your quiz details and questions.
               </p>
             </div>
 
@@ -327,6 +485,8 @@ export default function CreateQuiz() {
                     <option value='Science'>Science</option>
                     <option value='History'>History</option>
                     <option value='Geography'>Geography</option>
+                    <option value='Web Development'>Web Development</option>
+                    <option value='Programming'>Programming</option>
                   </select>
                 </div>
                 <div className='space-y-2'>
@@ -353,13 +513,29 @@ export default function CreateQuiz() {
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
                   >
-                    <option value='10'>10 minutes</option>
-                    <option value='15'>15 minutes</option>
-                    <option value='20'>20 minutes</option>
-                    <option value='30'>30 minutes</option>
-                    <option value='45'>45 minutes</option>
-                    <option value='60'>60 minutes</option>
+                    <option value='10 minutes'>10 minutes</option>
+                    <option value='15 minutes'>15 minutes</option>
+                    <option value='20 minutes'>20 minutes</option>
+                    <option value='25 minutes'>25 minutes</option>
+                    <option value='30 minutes'>30 minutes</option>
+                    <option value='45 minutes'>45 minutes</option>
+                    <option value='60 minutes'>60 minutes</option>
                   </select>
+                </div>
+                <div className='space-y-2'>
+                  <label className='block font-medium text-gray-700 text-sm'>
+                    Quiz Code
+                  </label>
+                  <input
+                    type='text'
+                    className='bg-gray-50 p-2 border border-gray-300 rounded-lg w-full'
+                    value={code}
+                    disabled
+                    readOnly
+                  />
+                  <p className='text-gray-500 text-xs'>
+                    Quiz code cannot be changed
+                  </p>
                 </div>
               </div>
 
@@ -381,7 +557,7 @@ export default function CreateQuiz() {
                   onClick={() => setActiveTab("questions")}
                   className='inline-flex justify-center items-center bg-pink-500 hover:bg-pink-600 px-6 py-2 rounded-full font-medium text-white transition-colors'
                 >
-                  Next: Add Questions
+                  Next: Edit Questions
                 </button>
               </div>
             </div>
@@ -430,14 +606,14 @@ export default function CreateQuiz() {
               <div className='flex justify-end'>
                 <button
                   onClick={saveQuiz}
-                  disabled={createQuizMutation.isPending}
+                  disabled={updateQuizMutation.isPending}
                   className={`inline-flex justify-center items-center bg-pink-500 hover:bg-pink-600 px-6 py-2 rounded-full font-medium text-white transition-colors ${
-                    createQuizMutation.isPending
+                    updateQuizMutation.isPending
                       ? "opacity-70 cursor-not-allowed"
                       : ""
                   }`}
                 >
-                  {createQuizMutation.isPending ? (
+                  {updateQuizMutation.isPending ? (
                     <>
                       <svg
                         className='mr-2 -ml-1 w-4 h-4 text-white animate-spin'
@@ -459,11 +635,11 @@ export default function CreateQuiz() {
                           d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
                         ></path>
                       </svg>
-                      Saving...
+                      Updating...
                     </>
                   ) : (
                     <>
-                      <Save className='mr-1 w-4 h-4' /> Save Quiz
+                      <Save className='mr-1 w-4 h-4' /> Update Quiz
                     </>
                   )}
                 </button>

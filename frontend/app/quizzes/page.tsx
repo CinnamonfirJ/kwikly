@@ -67,75 +67,6 @@ interface Quiz {
   __v: number;
 }
 
-// This would normally come from your MongoDB database
-// const allQuizzes = [
-//   {
-//     id: 1,
-//     title: "Statistics Fundamentals Quiz",
-//     subject: "Mathematics",
-//     topic: "Statistics",
-//     duration: "30 minutes",
-//     xpReward: 50,
-//     questions: 4,
-//     code: "STAT101",
-//     createdBy: "user123",
-//     creatorName: "Sarah Johnson",
-//     isPublic: true,
-//   },
-//   {
-//     id: 2,
-//     title: "Probability Quiz",
-//     subject: "Mathematics",
-//     topic: "Probability",
-//     duration: "2 minutes",
-//     xpReward: 40,
-//     questions: 5,
-//     code: "PROB202",
-//     createdBy: "user123",
-//     creatorName: "Sarah Johnson",
-//     isPublic: true,
-//   },
-//   {
-//     id: 3,
-//     title: "Proper Nouns Quiz",
-//     subject: "English",
-//     topic: "Proper Nouns",
-//     duration: "20 minutes",
-//     xpReward: 45,
-//     questions: 4,
-//     code: "ENG303",
-//     createdBy: "user456",
-//     creatorName: "Michael Brown",
-//     isPublic: true,
-//   },
-//   {
-//     id: 4,
-//     title: "World Geography Quiz",
-//     subject: "Geography",
-//     topic: "World Geography",
-//     duration: "25 minutes",
-//     xpReward: 55,
-//     questions: 6,
-//     code: "GEO404",
-//     createdBy: "user789",
-//     creatorName: "Emily Davis",
-//     isPublic: true,
-//   },
-//   {
-//     id: 5,
-//     title: "Basic Chemistry Quiz",
-//     subject: "Science",
-//     topic: "Chemistry",
-//     duration: "35 minutes",
-//     xpReward: 60,
-//     questions: 7,
-//     code: "CHEM505",
-//     createdBy: "user456",
-//     creatorName: "Michael Brown",
-//     isPublic: true,
-//   },
-// ];
-
 export default function QuizzesPage() {
   // const router = useRouter();
   const searchParams = useSearchParams();
@@ -145,8 +76,6 @@ export default function QuizzesPage() {
   const [selectedSubject, setSelectedSubject] = useState("");
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [copiedCode, setCopiedCode] = useState("");
-
-  // const [quiz, setQuiz] = useState<Quiz | null>(null); // Initialize with `null`
 
   const { data: quizData } = useQuery({
     queryKey: ["quiz"],
@@ -303,7 +232,7 @@ export default function QuizzesPage() {
                   </span>
                   <div className='flex items-center text-gray-500 text-sm'>
                     <Clock className='mr-1 w-3 h-3' />
-                    {quiz.duration} minutes
+                    {quiz.duration}
                   </div>
                 </div>
                 <h3 className='mb-2 font-semibold text-lg line-clamp-1'>

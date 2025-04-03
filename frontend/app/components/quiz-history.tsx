@@ -30,6 +30,14 @@ interface User {
   updatedAt: string;
 }
 
+type Question = {
+  id: string;
+  questionText: string;
+  options: string[];
+  correctAnswer: string;
+  points: number;
+};
+
 interface Quiz {
   message: string;
   quiz: {
@@ -45,7 +53,7 @@ interface Quiz {
     code: string;
     createdBy: User;
     isPublic: boolean;
-    // questions: Question[];
+    questions: Question[];
     createdAt: string;
     updatedAt: string;
     __v: number;
@@ -83,18 +91,21 @@ export default function QuizHistory() {
   useEffect(() => {
     if (authUser?.quizResults) {
       setQuizHistory(
-        authUser.quizResults.map((result) => ({
-          id: result.quizId,
-          title: result.title,
-          date: new Date(result.completedAt).toISOString(), // Convert each date to a string
-          score: result.score, // Ensure each score is a number
-          passingScore: result.passingScore,
-          maxScore: result.maxScore,
-          subject: result.subject,
-          topic: result.topic,
-          duration: result.duration,
-          passed: result.passed, // Ensure each passed value is a boolean
-        }))
+        authUser.quizResults
+          .slice()
+          .reverse()
+          .map((result) => ({
+            id: result.quizId,
+            title: result.title,
+            date: new Date(result.completedAt).toISOString(), // Convert each date to a string
+            score: result.score, // Ensure each score is a number
+            passingScore: result.passingScore,
+            maxScore: result.maxScore,
+            subject: result.subject,
+            topic: result.topic,
+            duration: result.duration,
+            passed: result.passed, // Ensure each passed value is a boolean
+          }))
       );
     }
   }, [authUser]);
@@ -132,7 +143,7 @@ export default function QuizHistory() {
               </span>
               <span className='flex items-center'>
                 <Clock className='mr-1 w-3 h-3' />
-                {quiz.duration} minutes
+                {quiz.duration}
               </span>
             </div>
           </div>

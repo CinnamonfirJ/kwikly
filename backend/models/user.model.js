@@ -1,5 +1,24 @@
 import mongoose from "mongoose";
 
+// Define Quiz Progress Schema
+const QuizProgressSchema = new mongoose.Schema({
+  quizId: {
+    type: String,
+    required: true,
+  },
+  userId: {
+    type: String,
+    required: true,
+  },
+  currentQuestion: {
+    type: Number,
+    default: 0,
+  },
+  selectedAnswers: { type: Map, of: String, required: true },
+  timeLeft: { type: Number, required: true },
+  updatedAt: { type: Date, default: Date.now },
+});
+
 // Define the QuizResult schema
 const QuizResultSchema = new mongoose.Schema({
   quizId: {
@@ -80,6 +99,7 @@ const UserSchema = new mongoose.Schema({
     default: 0,
   },
   quizResults: [QuizResultSchema],
+  progress: [QuizProgressSchema],
   createdAt: {
     type: Date,
     default: Date.now,
