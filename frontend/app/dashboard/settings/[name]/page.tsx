@@ -1,38 +1,70 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
 import { useToastContext } from "@/providers/toast-provider"; // Import your custom toast
 
 export default function SettingsPage() {
-  const router = useRouter();
   const toast = useToastContext(); // Use your custom toast system
+  const queryClient = useQueryClient();
+  const [isLoading, setIsLoading] = useState(false);
+  const { name } = useParams();
 
-  const { data: user } = useQuery({
-    queryKey: ["authUser"],
-    queryFn: async () => {
-      const res = await fetch("/api/auth/user");
+  const fetchUser = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch(`/api/user/profile/${name}`);
+      const data = await res.json();
       if (!res.ok) throw new Error("Failed to fetch user data");
-      return res.json();
-    },
+      return data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      } else {
+        throw new Error("Failed to fetch user data");
+      }
+    }
+  };
+
+  const { data: authUser } = useQuery({
+    queryKey: ["authUser"],
+    queryFn: fetchUser,
+  });
+  const { data: user } = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: fetchUser,
   });
 
   const [formData, setFormData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
+    name: authUser?.name || "",
+    email: authUser?.email || "",
     currentPassword: "",
     newPassword: "",
-    favouriteTopic: user?.favouriteTopic || "",
+    favouriteTopic: authUser?.favouriteTopic || "",
     profilePicture: null as File | null,
   });
+
+  // Wait for user data before rendering form
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        name: user.name || "",
+        email: user.email || "",
+        favouriteTopic: user.favouriteTopic || "",
+      }));
+      setPreviewImage(user.profilePicture || null);
+      setIsLoading(false);
+    }
+  }, [user]);
 
   const [previewImage, setPreviewImage] = useState<string | null>(
     user?.profilePicture || null
   );
 
-  const updateUser = useMutation({
+  const { mutate: updateUser, isPending: isUpdatingProfile } = useMutation({
     mutationFn: async (data: FormData) => {
       console.log("Form Data", data);
 
@@ -42,7 +74,7 @@ export default function SettingsPage() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({ ...formData, profilePicture: previewImage }),
         });
 
         const newData = await res.json();
@@ -57,7 +89,10 @@ export default function SettingsPage() {
     },
     onSuccess: () => {
       toast.success("Profile updated successfully!");
-      router.refresh();
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["authUser"] }),
+        queryClient.invalidateQueries({ queryKey: ["userProfile"] }),
+      ]);
     },
     onError: (error) => {
       toast.error(error.message);
@@ -74,10 +109,11 @@ export default function SettingsPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData((prev) => ({ ...prev, profilePicture: file }));
-      setPreviewImage(file.name);
-      // setPreviewImage(URL.createObjectURL(file));
-      console.log(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPreviewImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -96,8 +132,18 @@ export default function SettingsPage() {
     }
 
     // console.log(data);
-    updateUser.mutate(data);
+    updateUser(data);
   };
+
+  if (isLoading) {
+    return (
+      <div className='mx-auto px-4 md:px-6 py-8 md:py-12 max-w-6xl container'>
+        <div className='flex justify-center items-center h-64'>
+          <div className='border-pink-500 border-t-2 border-b-2 rounded-full w-12 h-12 animate-spin'></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='mx-auto px-4 py-8 max-w-4xl'>
@@ -223,7 +269,13 @@ export default function SettingsPage() {
           type='submit'
           className='bg-pink-500 hover:bg-pink-600 px-4 py-2 rounded text-white'
         >
-          Update Profile
+          {isUpdatingProfile ? (
+            <div className='flex justify-center items-center'>
+              <div className='border-amber-50 border-t-2 border-b-2 rounded-full w-5 h-5 animate-spin'></div>
+            </div>
+          ) : (
+            "Update Profile"
+          )}
         </button>
       </form>
     </div>
