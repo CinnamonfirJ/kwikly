@@ -8,7 +8,7 @@ import Leaderboard from "../../components/leaderboard";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useRank } from "@/context/RankContext";
-// import { useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 
 // Types for QuizResult and User
 interface QuizResult {
@@ -58,7 +58,7 @@ export default function Dashboard() {
   const [quizResults, setQuizResults] = useState<Quiz>();
   const { calculateNextLevelXP } = useRank();
 
-  // const { name } = useParams();
+  const { name } = useParams();
 
   // console.log("Param name", name);
 

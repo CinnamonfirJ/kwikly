@@ -28,10 +28,13 @@ type SaveQuizResultRequest = {
   passed: boolean;
   title: string;
   passingScore: number;
+  code: string;
   maxScore: number;
   subject: string;
   topic: string;
   duration: string;
+  selectedAnswers: Record<number, string>;
+  timeLeft: number;
 };
 
 interface User {
@@ -343,6 +346,8 @@ export default function QuizSession({
   useEffect(() => {
     if (authUser?._id && quiz?._id) {
       console.log("Restoring progress from localStorage and backend...");
+      saveProgressToLocal();
+      saveProgressToBackend();
       restoreProgressFromLocal();
       restoreProgressFromBackend();
     } else {
@@ -407,10 +412,13 @@ export default function QuizSession({
     passed,
     title,
     passingScore,
+    code,
     maxScore,
     subject,
     topic,
     duration,
+    selectedAnswers,
+    timeLeft,
   }: SaveQuizResultRequest) => {
     try {
       const res = await axios.post("/api/user/save", {
@@ -420,10 +428,13 @@ export default function QuizSession({
         passed,
         title,
         passingScore,
+        code,
         maxScore,
         subject,
         topic,
         duration,
+        selectedAnswers,
+        timeLeft,
       });
 
       const data = res.data;
@@ -441,8 +452,8 @@ export default function QuizSession({
     mutationFn: saveQuizResult,
     onSuccess: () => {
       setQuizCompleted(true);
-      deleteProgressFromLocal(quiz?._id || "");
       // Delete progress after submission
+      deleteProgressFromLocal(quiz?._id || "");
       deleteProgressFromBackend(authUser?._id || "", quiz?._id || "");
       console.log("Quiz submitted. Progress deleted.");
       toast.success("Quiz results saved successfully!");
@@ -494,14 +505,19 @@ export default function QuizSession({
         passed: true,
         title: quiz.title,
         passingScore: quiz.passingScore,
+        code: quiz.code,
         maxScore: quiz.maxScore,
         subject: quiz.subject,
         topic: quiz.topic,
         duration: quiz.duration,
+        selectedAnswers: selectedAnswersRef.current,
+        timeLeft: timeLeftRef.current,
       };
+      console.log(scoreData);
       saveQuizMutate(scoreData);
       updateXPAndRank(quiz.xpReward);
-    } else {
+    }
+    if (percentage >= quiz.passingScore * 0.2) {
       const calculatedScore = Math.floor(quiz.xpReward * 0.25);
       console.log("User failed. Awarding partial XP:", calculatedScore);
       const scoreData = {
@@ -511,13 +527,38 @@ export default function QuizSession({
         passed: false,
         title: quiz.title,
         passingScore: quiz.passingScore,
+        code: quiz.code,
         maxScore: quiz.maxScore,
         subject: quiz.subject,
         topic: quiz.topic,
         duration: quiz.duration,
+        selectedAnswers: selectedAnswersRef.current,
+        timeLeft: timeLeftRef.current,
       };
       saveQuizMutate(scoreData);
       updateXPAndRank(calculatedScore);
+    }
+    if (percentage < quiz.passingScore * 0.2) {
+      // Use `percentage` instead of `score`
+      console.log("User passed. Awarding full XP:", quiz.xpReward);
+      const scoreData = {
+        userId,
+        quizId,
+        score: savedScore,
+        passed: true,
+        title: quiz.title,
+        passingScore: quiz.passingScore,
+        code: quiz.code,
+        maxScore: quiz.maxScore,
+        subject: quiz.subject,
+        topic: quiz.topic,
+        duration: quiz.duration,
+        selectedAnswers: selectedAnswersRef.current,
+        timeLeft: timeLeftRef.current,
+      };
+      console.log(scoreData);
+      saveQuizMutate(scoreData);
+      updateXPAndRank(0);
     }
   };
 
@@ -696,12 +737,6 @@ export default function QuizSession({
                 <h3 className='mb-2 font-bold text-lg'>Quiz Creator</h3>
                 <div className='flex items-center gap-3'>
                   <div className='relative border-4 border-pink-100 rounded-full w-16 h-16 overflow-hidden'>
-                    {/* <Image
-                      src={quiz.createdBy.profilePicture || "/placeholder.svg"}
-                      alt={quiz.createdBy.name}
-                      fill
-                      className='object-cover'
-                    /> */}
                     {quiz.createdBy?.profilePicture ? (
                       <Image
                         src={
@@ -766,10 +801,10 @@ export default function QuizSession({
 
             <div className='flex sm:flex-row flex-col justify-center gap-4'>
               <Link
-                href='/quizzes'
+                href={`/quiz-result/${quiz.code}`}
                 className='inline-flex justify-center items-center bg-pink-500 hover:bg-pink-600 px-6 py-3 rounded-full font-medium text-white transition-colors'
               >
-                Back to Quizzes
+                View Result
               </Link>
 
               <button
@@ -783,6 +818,15 @@ export default function QuizSession({
               >
                 Retake Quiz
               </button>
+            </div>
+
+            <div className='flex sm:flex-row flex-col justify-center gap-4 mt-4'>
+              <Link
+                href='/quizzes'
+                className='inline-flex justify-center items-center bg-pink-500 hover:bg-pink-600 px-6 py-3 rounded-full font-medium text-white transition-colors'
+              >
+                Back to Quizzes
+              </Link>
             </div>
           </div>
         </div>

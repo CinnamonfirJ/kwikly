@@ -134,10 +134,13 @@ export const saveQuizResult = async (req, res) => {
       passed,
       title,
       passingScore,
+      code,
       maxScore,
       subject,
       topic,
       duration,
+      selectedAnswers,
+      timeLeft,
     } = req.body;
 
     // Validate request data
@@ -148,10 +151,13 @@ export const saveQuizResult = async (req, res) => {
       passed === undefined ||
       !title ||
       passingScore === undefined ||
+      code === undefined ||
       maxScore === undefined ||
       !subject ||
       !topic ||
-      !duration
+      !duration ||
+      !selectedAnswers === undefined ||
+      !timeLeft
     ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
@@ -175,8 +181,12 @@ export const saveQuizResult = async (req, res) => {
       if (score > existingQuiz.score) {
         existingQuiz.score = score;
         existingQuiz.passed = passed;
-        existingQuiz.completedAt = new Date();
       }
+
+      existingQuiz.code = code;
+      existingQuiz.selectedAnswers = selectedAnswers;
+      existingQuiz.timeLeft = timeLeft;
+      existingQuiz.completedAt = new Date();
 
       await user.save();
       return res.status(200).json({
@@ -191,10 +201,13 @@ export const saveQuizResult = async (req, res) => {
       passed,
       title,
       passingScore,
+      code,
       maxScore,
       subject,
       topic,
       duration,
+      selectedAnswers,
+      timeLeft,
     });
 
     // Optionally increase quizzesCompleted if you need to track it
@@ -253,6 +266,7 @@ export const getUserQuizProgress = async (req, res) => {
 export const saveUserQuizProgress = async (req, res) => {
   const { userId } = req.params; // Extract userId from the request parameters
   const { quizId, currentQuestion, selectedAnswers, timeLeft } = req.body; // Extract progress data from the request body
+  console.log(req.body);
 
   // Validate required fields
   if (!quizId || currentQuestion === undefined || !timeLeft) {

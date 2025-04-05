@@ -14,9 +14,17 @@ const QuizProgressSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  selectedAnswers: { type: Map, of: String, required: true },
-  timeLeft: { type: Number, required: true },
-  updatedAt: { type: Date, default: Date.now },
+  selectedAnswers: {
+    type: Map,
+    of: String,
+  },
+  timeLeft: {
+    type: Number,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 // Define the QuizResult schema
@@ -45,6 +53,10 @@ const QuizResultSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  code: {
+    type: String,
+    require: true,
+  },
   maxScore: {
     type: Number,
     required: true,
@@ -60,6 +72,17 @@ const QuizResultSchema = new mongoose.Schema({
   duration: {
     type: String,
     required: true,
+  },
+  selectedAnswers: {
+    type: Map,
+    of: String,
+  },
+  timeLeft: {
+    type: Number,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
   },
 });
 

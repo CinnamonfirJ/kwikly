@@ -75,7 +75,9 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (file) {
       setFormData((prev) => ({ ...prev, profilePicture: file }));
-      setPreviewImage(URL.createObjectURL(file));
+      setPreviewImage(file.name);
+      // setPreviewImage(URL.createObjectURL(file));
+      console.log(file);
     }
   };
 

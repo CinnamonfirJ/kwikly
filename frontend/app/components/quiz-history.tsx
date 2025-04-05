@@ -1,5 +1,6 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { CheckCircle, XCircle, Clock, BookMarked } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 // Types for QuizResult and User
@@ -10,6 +11,7 @@ interface QuizResult {
   completedAt: Date;
   title: string;
   passingScore: number;
+  code: string;
   maxScore: number;
   subject: string;
   topic: string;
@@ -66,6 +68,7 @@ interface QuizHistory {
   date: string;
   score: number;
   passingScore: number;
+  code: string;
   maxScore: number;
   subject: string;
   topic: string;
@@ -75,6 +78,9 @@ interface QuizHistory {
 
 export default function QuizHistory() {
   const queryClient = useQueryClient();
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [user, setUser] = useState<User | null>(null); // Initialize with `null`
 
   // Get the cached user data
   const authUserResults = queryClient.getQueryData<Quiz>(["userResults"]);
@@ -88,10 +94,27 @@ export default function QuizHistory() {
 
   const [quizHistory, setQuizHistory] = useState<QuizHistory[]>([]);
 
+  const { data: userData } = useQuery({
+    queryKey: ["authUser"],
+    queryFn: async () => {
+      const res = await fetch(`/api/user/profile/${authUser?.name}`);
+      const data = await res.json();
+      return data;
+    },
+  });
+
   useEffect(() => {
-    if (authUser?.quizResults) {
+    setIsLoading(true);
+    if (userData) {
+      setUser(userData);
+      setIsLoading(false);
+    }
+  }, [userData]);
+
+  useEffect(() => {
+    if (user?.quizResults) {
       setQuizHistory(
-        authUser.quizResults
+        user.quizResults
           .slice()
           .reverse()
           .map((result) => ({
@@ -100,6 +123,7 @@ export default function QuizHistory() {
             date: new Date(result.completedAt).toISOString(), // Convert each date to a string
             score: result.score, // Ensure each score is a number
             passingScore: result.passingScore,
+            code: result.code,
             maxScore: result.maxScore,
             subject: result.subject,
             topic: result.topic,
@@ -108,9 +132,19 @@ export default function QuizHistory() {
           }))
       );
     }
-  }, [authUser]);
+  }, [user]);
 
   console.log("Collected Quiz", quizHistory);
+
+  if (isLoading) {
+    return (
+      <div className='mx-auto px-4 md:px-6 py-8 md:py-12 max-w-6xl container'>
+        <div className='flex justify-center items-center h-64'>
+          <div className='border-pink-500 border-t-2 border-b-2 rounded-full w-12 h-12 animate-spin'></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='space-y-4'>
@@ -160,6 +194,16 @@ export default function QuizHistory() {
             </div>
             <div className='text-gray-500 text-xs'>
               Passing score: {quiz.passingScore}
+            </div>
+          </div>
+
+          <div className='flex justify-between items-center mt-2'>
+            <div className='flex items-center gap-1'>
+              <Link href={`/quiz-result/${quiz.code}`}>
+                <span className='flex justify-center items-center gap-2 font-medium text-sm'>
+                  {quiz.code} <BookMarked className='w-4 h-4 text-green-500' />
+                </span>
+              </Link>
             </div>
           </div>
         </div>
