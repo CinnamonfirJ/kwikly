@@ -62,7 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const storedUser = getUserQuery;
 
-    if (storedUser) {
+    if (storedUser?.name !== undefined) {
+      console.log("User data:", storedUser.name);
       setIsAuthenticated(true);
     }
     setIsPending(false);
