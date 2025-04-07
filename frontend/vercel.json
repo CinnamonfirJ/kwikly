@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://kwikly-api.onrender.com/api/$1"
+    }
+  ]
+}
