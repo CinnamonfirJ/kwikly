@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/:path*", // Intercept all /api requests
-        destination: "http://localhost:5000/api/:path*", // Redirect to backend
+        destination: "http://localhost:10000/api/:path*", // Redirect to backend
       },
     ];
   },
