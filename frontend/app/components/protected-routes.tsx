@@ -11,7 +11,7 @@ export default function ProtectedRoute({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading } = useAuthContext();
+  const { isAuthenticated, isPending } = useAuthContext();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -31,7 +31,7 @@ export default function ProtectedRoute({
 
   useEffect(() => {
     // Only run after initial loading is complete
-    if (!isLoading) {
+    if (!isPending) {
       // If not authenticated and not on a public route, redirect to login
       if (!isAuthenticated && !isPublicRoute) {
         router.push(
@@ -47,10 +47,10 @@ export default function ProtectedRoute({
         router.push("/dashboard");
       }
     }
-  }, [isAuthenticated, isLoading, isPublicRoute, pathname, router]);
+  }, [isAuthenticated, isPending, isPublicRoute, pathname, router]);
 
   // Show loading or nothing while checking authentication
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className='flex justify-center items-center min-h-screen'>
         <div className='border-pink-500 border-t-2 border-b-2 rounded-full w-12 h-12 animate-spin'></div>

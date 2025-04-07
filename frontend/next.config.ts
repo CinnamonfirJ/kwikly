@@ -18,6 +18,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  reactStrictMode: true,
+  swcMinify: true,
+  output: "standalone", // This creates a more self-contained build
+  // Ensure the basePath is empty for production
+  basePath: "",
+  // Configure asset prefix if needed
+  assetPrefix: process.env.NODE_ENV === "production" ? "" : undefined,
 };
 
 export default nextConfig;
