@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Define which routes are public (accessible without authentication)
 const publicRoutes = [
   "/",
   "/auth/login",
@@ -13,19 +12,19 @@ const publicRoutes = [
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Check if the route is protected (not in public routes)
+  // Debug: log the path for every request
+  console.log("Request Path:", pathname);
+
   const isProtectedRoute = !publicRoutes.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 
-  // Get the user cookie
   const userCookie = request.cookies.get("jwt");
   const isAuthenticated = !!userCookie;
 
   // If the route is protected and the user is not authenticated, redirect to login
   if (isProtectedRoute && !isAuthenticated) {
     const url = new URL("/auth/login", request.url);
-    // Add the original URL as a parameter to redirect after login
     url.searchParams.set("callbackUrl", encodeURI(request.url));
     return NextResponse.redirect(url);
   }
@@ -38,18 +37,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/quizzes", request.url));
   }
 
+  // Continue with the request
   return NextResponse.next();
 }
 
-// Configure the middleware to run on specific paths
+// Update the matcher to ensure that all the static and public assets are included properly
 export const config = {
   matcher: [
-    // Match all request paths except for:
-    // - _next/static (static files)
-    // - _next/image (image optimization files)
-    // - favicon.ico
-    // - public folder files (static assets)
-    // - api routes
-    "/((?!_next/static|_next/image|favicon.ico|favicon.png|public/|public/images/|api/).*)",
+    "/((?!_next/static|_next/image|favicon.ico|favicon.png|public/images/|api).*)",
   ],
 };
