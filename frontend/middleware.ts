@@ -44,14 +44,12 @@ export function middleware(request: NextRequest) {
 // Configure the middleware to run on specific paths
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     * - api routes (we'll handle auth in the API routes separately)
-     */
-    "/((?!_next/static|_next/image|favicon.ico|public|api).*)",
+    // Match all request paths except for:
+    // - _next/static (static files)
+    // - _next/image (image optimization files)
+    // - favicon.ico
+    // - public folder files (static assets)
+    // - api routes
+    "/((?!_next/static|_next/image|favicon.ico|public/|api/).*)",
   ],
 };
