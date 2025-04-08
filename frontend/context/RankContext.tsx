@@ -29,96 +29,100 @@ interface RankContextType {
 // Rank data with levels assigned by order
 const rankData: RankData[] = [
   {
-    rank: "🥚 Egghead",
+    rank: "🥚 Brainy Beginnings",
     minXP: 0,
     maxXP: 99,
     description:
-      "Every genius starts somewhere... and you’re just cracking the shell!",
+      "Every great mind starts small… you’re just cracking the shell!",
   },
   {
     rank: "🐣 Curious Chick",
     minXP: 100,
     maxXP: 299,
     description:
-      "You’ve taken your first steps into quiz greatness. Peep peep!",
+      "You’re peeping into the world of knowledge — and it's looking bright!",
   },
   {
-    rank: "📖 Page Turner",
+    rank: "📚 Page Peeker",
     minXP: 300,
     maxXP: 599,
     description:
-      "Reading through quizzes like it’s your favorite book. Keep flipping!",
+      "Skimming through concepts, one quiz at a time. You're warming up!",
   },
   {
-    rank: "🧠 Brain Sprout",
+    rank: "🌱 Brain Sprout",
     minXP: 600,
     maxXP: 999,
-    description:
-      "Your knowledge is growing like a smart little plant in the sun.",
+    description: "Look at you grow! Learning is starting to click and stick.",
   },
   {
-    rank: "💡 Idea Machine",
+    rank: "💡 Spark Finder",
     minXP: 1000,
     maxXP: 1499,
     description:
-      "You’re bursting with ideas! Now, can you turn them into quiz victories?",
+      "You’re connecting the dots and lighting up ideas. Keep going!",
   },
   {
-    rank: "🎩 Trivia Apprentice",
+    rank: "🧪 Learning Explorer",
     minXP: 1500,
     maxXP: 2499,
-    description:
-      "You’re picking up tricks of the quiz trade. The hat suits you!",
+    description: "You're mixing memory, focus, and curiosity like a pro!",
   },
   {
-    rank: "🔬 Quiz Scientist",
+    rank: "🎮 Focus Fighter",
     minXP: 2500,
     maxXP: 3999,
-    description: "Mixing curiosity and knowledge like a true scientist!",
+    description:
+      "You're battling distractions and scoring big wins. Epic combo!",
   },
   {
-    rank: "🎭 Riddle Master",
+    rank: "🧠 Recall Ranger",
     minXP: 4000,
     maxXP: 5999,
-    description: "Your brain twists and turns like a good mystery novel.",
+    description:
+      "You're mastering active recall. Your brain is leveling up fast!",
   },
   {
-    rank: "📜 Fact Collector",
+    rank: "📜 Wisdom Seeker",
     minXP: 6000,
     maxXP: 7999,
     description:
-      "Your mind is a library of trivia. Just don’t forget the Dewey Decimal System!",
+      "Your quiz log is packed with XP. You're becoming a memory master.",
   },
   {
-    rank: "🌌 Knowledge Voyager",
+    rank: "🚀 Knowledge Voyager",
     minXP: 8000,
     maxXP: 9999,
-    description: "Sailing through the cosmos of knowledge at warp speed!",
+    description:
+      "You’re traveling across subjects like a rocket-fueled learner!",
   },
   {
-    rank: "⚡ Lightning Thinker",
+    rank: "⚡ Brainstorm Ace",
     minXP: 10000,
     maxXP: 12999,
-    description: "Your answers come at the speed of light! Are you even human?",
+    description:
+      "Fast, sharp, and insightful. You zap through quizzes like lightning!",
   },
   {
-    rank: "🏛️ Trivia Titan",
+    rank: "🏛️ Quiz Sage",
     minXP: 13000,
     maxXP: 15999,
-    description: "Legends speak of a wise being… it’s YOU!",
+    description:
+      "Your strategies are wise, your answers on point. A true scholar!",
   },
   {
-    rank: "👑 Quiz Royalty",
+    rank: "👑 Mind Monarch",
     minXP: 16000,
     maxXP: 19999,
-    description: "Bow down, commoners! The quiz kingdom belongs to you.",
+    description:
+      "You've ruled the quiz realms with brilliance and consistency.",
   },
   {
-    rank: "🚀 Grandmaster of Knowledge",
+    rank: "🌌 Kwikly Grandmaster",
     minXP: 20000,
     maxXP: Infinity,
     description:
-      "You’ve reached the pinnacle of quiz-dom. The universe seeks YOUR wisdom!",
+      "You've reached the peak! Your mind is a galaxy of glowing genius!",
   },
 ];
 
