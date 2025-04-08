@@ -11,7 +11,11 @@ import {
   User,
   Settings,
   LayoutDashboard,
+  Menu,
+  X,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
 import { useAuthContext } from "@/context/AuthContext";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
@@ -44,6 +48,7 @@ export default function Navbar() {
   const [user, setUser] = useState<User | null>(null); // Initialize with `null`
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const { data: userData } = useQuery({
     queryKey: ["authUser"],
@@ -77,6 +82,81 @@ export default function Navbar() {
 
   return (
     <header className='top-0 z-50 sticky bg-white border-pink-100 border-b w-full'>
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            {/* Overlay */}
+            <motion.div
+              className='z-40 fixed inset-0 bg-black bg-opacity-50'
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileOpen(false)}
+            />
+
+            {/* Slide-in Menu */}
+            <motion.div
+              className='top-0 right-0 z-50 fixed flex flex-col gap-6 bg-white shadow-lg p-6 w-64 h-full'
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "tween" }}
+            >
+              <Link
+                href='/quizzes'
+                className='font-medium text-pink-500'
+                onClick={() => setMobileOpen(false)}
+              >
+                Browse Quizzes
+              </Link>
+
+              {isAuthenticated && (
+                <>
+                  <Link
+                    href='/my-quizzes'
+                    className='font-medium text-pink-500'
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    My Quizzes
+                  </Link>
+                  <Link
+                    href={`/dashboard/${user?.name}`}
+                    className='font-medium text-pink-500'
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    href='/create-quiz'
+                    className='bg-pink-500 px-4 py-2 rounded-full text-white text-sm text-center'
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Create Quiz
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className='text-red-500 text-sm text-left'
+                  >
+                    <LogOut className='inline-block mr-2 w-4 h-4' />
+                    Logout
+                  </button>
+                </>
+              )}
+
+              {!isAuthenticated && (
+                <Link
+                  href='/auth/login'
+                  className='font-medium text-pink-500'
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Login
+                </Link>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       <div className='flex justify-between items-center mx-auto px-4 md:px-6 h-16 container'>
         <Link
           href='/'
@@ -137,6 +217,18 @@ export default function Navbar() {
                   <div className='flex justify-center items-center bg-pink-50 w-full h-full font-medium text-pink-500 text-sm'>
                     {getInitials(user?.name || "")}
                   </div>
+                )}
+              </button>
+
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className='md:hidden z-50 hover:bg-pink-50 p-2 border border-pink-100 rounded-full text-pink-500 transition'
+              >
+                {mobileOpen ? (
+                  <X className='w-5 h-5' />
+                ) : (
+                  <Menu className='w-5 h-5' />
                 )}
               </button>
 

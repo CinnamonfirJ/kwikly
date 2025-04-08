@@ -97,7 +97,9 @@ export default function Leaderboard() {
                     )}
                   </div>
                   <div className='flex justify-between items-center gap-5'>
-                    <span className='font-medium'>{user.name}</span>
+                    <span className='w-20 font-medium truncate'>
+                      {user.name}
+                    </span>
                     {/* Only show "Me" if this user is the logged-in user */}
                     {authUser?.name === user.name && (
                       <span className='bg-pink-50 p-1 px-2 rounded-3xl font-medium text-pink-500 text-xs'>
@@ -107,7 +109,7 @@ export default function Leaderboard() {
                   </div>
                 </div>
               </div>
-              <div className='flex items-center gap-2'>
+              <div className='hidden md:flex items-center gap-2'>
                 <div className='flex items-center text-pink-500'>
                   <Award className='mr-1 w-4 h-4' />
                   <span className='font-medium'>Lvl {user.level}</span>

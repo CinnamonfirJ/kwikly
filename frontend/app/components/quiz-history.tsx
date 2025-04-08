@@ -154,7 +154,7 @@ export default function QuizHistory() {
           className='bg-white shadow-sm p-4 border border-pink-100 rounded-lg'
         >
           <div className='pb-2'>
-            <div className='flex justify-between items-center'>
+            <div className='flex md:flex-row flex-col justify-between md:items-center'>
               <div className='flex items-center gap-2'>
                 <h3 className='font-semibold text-base'>{quiz.title}</h3>
                 {quiz.passed ? (
@@ -171,7 +171,7 @@ export default function QuizHistory() {
                 {new Date(quiz.date).toLocaleDateString()}
               </div>
             </div>
-            <div className='flex items-center gap-2 mt-1 text-gray-500 text-xs'>
+            <div className='flex md:flex-row flex-col md:items-center gap-2 mt-1 text-gray-500 text-xs'>
               <span>
                 {quiz.subject} • {quiz.topic}
               </span>
