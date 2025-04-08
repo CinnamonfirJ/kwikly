@@ -226,7 +226,7 @@ export default function FileImportButton({ onImport }: FileImportButtonProps) {
   };
 
   return (
-    <div>
+    <div className='mt-4'>
       <input
         type='file'
         ref={fileInputRef}
@@ -241,26 +241,9 @@ export default function FileImportButton({ onImport }: FileImportButtonProps) {
       >
         {isLoading ? (
           <>
-            <svg
-              className='mr-2 -ml-1 w-4 h-4 text-pink-500 animate-spin'
-              xmlns='http://www.w3.org/2000/svg'
-              fill='none'
-              viewBox='0 0 24 24'
-            >
-              <circle
-                className='opacity-25'
-                cx='12'
-                cy='12'
-                r='10'
-                stroke='currentColor'
-                strokeWidth='4'
-              ></circle>
-              <path
-                className='opacity-75'
-                fill='currentColor'
-                d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-              ></path>
-            </svg>
+            <div className='flex justify-center items-center'>
+              <div className='border-amber-50 border-t-2 border-b-2 rounded-full w-5 h-5 animate-spin'></div>
+            </div>
             Importing...
           </>
         ) : (
@@ -276,33 +259,38 @@ export default function FileImportButton({ onImport }: FileImportButtonProps) {
         <span>Supported formats: CSV, JSON, TXT</span>
       </div>
 
-      <div className='hidden md:block bg-blue-50 mt-4 p-3 border border-blue-200 rounded-lg text-blue-800 text-sm'>
-        <div className='flex items-start gap-2'>
+      <div className='bg-blue-50 mt-4 p-4 sm:p-3 border border-blue-200 rounded-lg text-blue-800 text-sm'>
+        <div className='flex sm:flex-row flex-col sm:items-start sm:gap-3'>
           <AlertCircle
             onClick={() => setFormatModalOpen(true)}
-            className='flex-shrink-0 mt-0.5 w-5 h-5 text-blue-500 cursor-pointer'
+            className='flex-shrink-0 bg-blue-100 sm:mt-0.5 mb-2 sm:mb-0 p-1 rounded-full w-6 h-6 text-blue-500 cursor-pointer pulse-soft'
           />
-          <div>
-            <p className='mb-1 font-medium'>Import Format Tips:</p>
-            <ul className='space-y-1 ml-1 list-disc list-inside'>
+
+          <div className='text-sm break-words whitespace-normal'>
+            <p className='mb-2 font-medium'>Import Format Tips:</p>
+            <ul className='space-y-2 ml-4 text-sm list-disc list-inside'>
               <li>
-                <strong>CSV:</strong> First row should be headers
-                (title,subject,topic,instruction,questionText,options,correctAnswer,points)
+                <strong>CSV:</strong> First row should be headers (
+                <span className='break-all'>
+                  title,subject,topic,instruction,questionText,options,correctAnswer,points
+                </span>
+                )
               </li>
               <li>
-                <strong>JSON:</strong> Must include title, subject, topic,
-                instruction fields and optional questions array
+                <strong>JSON:</strong> Must include <code>title</code>,{" "}
+                <code>subject</code>, <code>topic</code>,
+                <code>instruction</code> fields and optional{" "}
+                <code>questions</code> array
               </li>
               <li>
                 <strong>Text:</strong> First 4 lines should be title, subject,
-                topic, and instruction. Questions format: Q: question, A:
-                option1, B: option2, C: option3, D: option4, Correct: A, Points:
-                1
+                topic, and instruction. Questions format: <br />
+                Q: question, A: option1, B: option2, C: option3, D: option4,
+                Correct: A, Points: 1
               </li>
             </ul>
           </div>
 
-          {/* Examples Confirmation Modal */}
           <ConfirmationModal
             isOpen={formatModalOpen}
             onClose={() => setFormatModalOpen(false)}

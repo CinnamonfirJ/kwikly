@@ -79,24 +79,6 @@ interface Quiz {
   __v: number;
 }
 
-// Helper function to convert duration string to seconds
-const durationToSeconds = (duration: string): number => {
-  const parts = duration.split(" ");
-  if (parts.length === 2) {
-    const value = Number.parseInt(parts[0]);
-    const unit = parts[1].toLowerCase();
-
-    if (unit.includes("minute")) {
-      return value * 60; // Convert minutes to seconds
-    } else if (unit.includes("hour")) {
-      return value * 60 * 60; // Convert hours to seconds
-    }
-  }
-
-  // Default to 30 minutes if parsing fails
-  return 30 * 60;
-};
-
 const QuizResults = ({ params }: { params: Promise<{ code: string }> }) => {
   const router = useRouter();
   const unwrappedParams = use(params); // Unwrap the params Promise
@@ -184,24 +166,23 @@ const QuizResults = ({ params }: { params: Promise<{ code: string }> }) => {
     return quizzes.find((quiz) => quiz.code === code);
   };
 
+  const findQuizHistoryByCode = (id: string) => {
+    if (quiz?._id === id) {
+      return quizHistory.find((quiz) => quiz.id === id);
+    }
+  };
+
   const quiz = findQuizByCode(code);
+  const retrivedQuizHistory = findQuizHistoryByCode(quiz?._id || "");
   const questions = quiz?.questions || [];
   const selectedQuizAnswers = quizHistory
     .map((result) => result.selectedAnswers)
     .find((answer) => answer !== undefined);
-  console.log("The HISTORY", selectedQuizAnswers);
 
   // Check if current user is the creator
   const isCreator = quiz?.createdBy.name === quiz?.createdBy.name;
 
-  // Set initial time based on quiz duration
-  const [timeLeft, setTimeLeft] = useState(1800); // Default to 30 minutes
-
-  useEffect(() => {
-    if (quiz?.duration) {
-      setTimeLeft(durationToSeconds(quiz?.duration || ""));
-    }
-  }, [quiz?.duration]); // Runs when quiz.duration updates
+  // console.log("Checking Quiz History", retrivedQuizHistory);
 
   // Format time
   const formatTime = (seconds: number) => {
@@ -271,7 +252,7 @@ const QuizResults = ({ params }: { params: Promise<{ code: string }> }) => {
   }
 
   return (
-    <div className='gap-8 grid md:grid-cols-3'>
+    <div className='gap-8 grid md:grid-cols-3 mx-auto container'>
       {/* Results Section */}
       <div className='md:col-span-2 bg-white shadow-md border border-pink-100 rounded-xl overflow-hidden'>
         {/* Header */}
@@ -288,34 +269,30 @@ const QuizResults = ({ params }: { params: Promise<{ code: string }> }) => {
           <div className='flex items-center gap-2 bg-pink-50 px-3 py-1 rounded-full'>
             <Clock className='w-4 h-4 text-pink-500' />
             <span className='font-medium text-pink-500'>
-              {formatTime(timeLeft)}
+              {formatTime(retrivedQuizHistory?.timeLeft || 0)}
             </span>
           </div>
         </div>
 
-        {quizHistory.map((quiz, index) => {
-          if (index == quizHistory.length - 1)
-            return (
-              <div
-                key={quiz.id}
-                className='flex justify-between items-center mt-2 p-6'
-              >
-                <div className='flex items-center gap-1'>
-                  <span className='font-medium text-sm'>
-                    Score: {quiz.score}/{quiz.maxScore}
-                  </span>
-                  {quiz.passed ? (
-                    <CheckCircle className='w-4 h-4 text-green-500' />
-                  ) : (
-                    <XCircle className='w-4 h-4 text-red-500' />
-                  )}
-                </div>
-                <div className='text-gray-500 text-xs'>
-                  Passing score: {quiz.passingScore}
-                </div>
-              </div>
-            );
-        })}
+        <div
+          key={retrivedQuizHistory?.id}
+          className='flex justify-between items-center mt-2 p-6'
+        >
+          <div className='flex items-center gap-1'>
+            <span className='font-medium text-sm'>
+              Score: {retrivedQuizHistory?.score}/
+              {retrivedQuizHistory?.maxScore}
+            </span>
+            {retrivedQuizHistory?.passed ? (
+              <CheckCircle className='w-4 h-4 text-green-500' />
+            ) : (
+              <XCircle className='w-4 h-4 text-red-500' />
+            )}
+          </div>
+          <div className='text-gray-500 text-xs'>
+            Passing score: {retrivedQuizHistory?.passingScore}%
+          </div>
+        </div>
 
         <div className='space-y-10 p-6'>
           {questions.map((question, qIndex) => {
@@ -324,7 +301,7 @@ const QuizResults = ({ params }: { params: Promise<{ code: string }> }) => {
 
             // const selected = selectedAnswers[question.id]; // selectedAnswers is from the specific quiz result
             const isCorrect = selected === question.correctAnswer;
-            console.log("Selected:", selected);
+            // console.log("Selected:", selected);
 
             return (
               <div key={question.id} className='pb-8 border-b'>
@@ -338,7 +315,7 @@ const QuizResults = ({ params }: { params: Promise<{ code: string }> }) => {
                     const selectedAnswer = selected;
                     const isSelected = selectedAnswer === option;
                     const isAnswer = option === question.correctAnswer;
-                    console.log("Is Selected:", option);
+                    // console.log("Is Selected:", option);
                     return (
                       <div
                         key={index}

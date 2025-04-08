@@ -24,3 +24,17 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    background-color: rgba(219, 234, 254, 0.5); /* soft blue */
+  }
+  50% {
+    background-color: rgba(191, 219, 254, 1); /* stronger blue */
+  }
+}
+
+.pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}

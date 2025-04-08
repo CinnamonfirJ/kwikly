@@ -193,7 +193,7 @@ export default function QuizHistory() {
               )}
             </div>
             <div className='text-gray-500 text-xs'>
-              Passing score: {quiz.passingScore}
+              Passing score: {quiz.passingScore}%
             </div>
           </div>
 

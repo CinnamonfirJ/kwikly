@@ -156,7 +156,7 @@ export default function QuizSession({
   const isCreator = quiz?.createdBy.name === quiz?.createdBy.name;
 
   // Set initial time based on quiz duration
-  const [timeLeft, setTimeLeft] = useState(1800); // Default to 30 minutes
+  const [timeLeft, setTimeLeft] = useState(0); // Default to 30 minutes
 
   useEffect(() => {
     if (quiz?.duration) {
@@ -511,13 +511,15 @@ export default function QuizSession({
         topic: quiz.topic,
         duration: quiz.duration,
         selectedAnswers: selectedAnswersRef.current,
-        timeLeft: timeLeftRef.current,
+        timeLeft: timeLeft,
       };
-      console.log(scoreData);
       saveQuizMutate(scoreData);
       updateXPAndRank(quiz.xpReward);
     }
-    if (percentage >= quiz.passingScore * 0.2) {
+    if (
+      percentage >= quiz.passingScore * 0.3 &&
+      percentage < quiz.passingScore
+    ) {
       const calculatedScore = Math.floor(quiz.xpReward * 0.25);
       console.log("User failed. Awarding partial XP:", calculatedScore);
       const scoreData = {
@@ -533,12 +535,12 @@ export default function QuizSession({
         topic: quiz.topic,
         duration: quiz.duration,
         selectedAnswers: selectedAnswersRef.current,
-        timeLeft: timeLeftRef.current,
+        timeLeft: timeLeft,
       };
       saveQuizMutate(scoreData);
       updateXPAndRank(calculatedScore);
     }
-    if (percentage < quiz.passingScore * 0.2) {
+    if (percentage < quiz.passingScore * 0.3) {
       // Use `percentage` instead of `score`
       console.log("User passed. Awarding full XP:", quiz.xpReward);
       const scoreData = {
@@ -554,9 +556,8 @@ export default function QuizSession({
         topic: quiz.topic,
         duration: quiz.duration,
         selectedAnswers: selectedAnswersRef.current,
-        timeLeft: timeLeftRef.current,
+        timeLeft: timeLeft,
       };
-      console.log(scoreData);
       saveQuizMutate(scoreData);
       updateXPAndRank(0);
     }

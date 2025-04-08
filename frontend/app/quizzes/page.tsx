@@ -275,10 +275,10 @@ export default function QuizzesPage() {
 
                 <div className='flex gap-2'>
                   <Link
-                    href={`/quiz-session/${quiz.code}`}
+                    href={`/quiz-details/${quiz.code}`}
                     className='inline-flex flex-1 justify-center items-center bg-pink-500 hover:bg-pink-600 px-4 py-2 rounded-full font-medium text-white transition-colors'
                   >
-                    Take Quiz <ChevronRight className='ml-1 w-4 h-4' />
+                    See Quiz <ChevronRight className='ml-1 w-4 h-4' />
                   </Link>
                   <button
                     onClick={() => {

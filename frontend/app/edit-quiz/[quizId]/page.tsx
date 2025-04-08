@@ -386,8 +386,6 @@ export default function EditQuiz() {
             </div>
 
             <div className='flex sm:flex-row flex-col items-center gap-3'>
-              <FileImportButton onImport={handleImportedQuiz} />
-
               <div className='bg-pink-50 p-3 rounded-lg'>
                 <div className='flex items-center gap-2'>
                   <button
@@ -646,6 +644,8 @@ export default function EditQuiz() {
               </div>
             </div>
           )}
+
+          <FileImportButton onImport={handleImportedQuiz} />
         </div>
       </div>
     </div>
