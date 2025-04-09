@@ -9,6 +9,8 @@ import { Eye, EyeOff, UserPlus, BookOpen } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import SignupIllustation from "../../public/signupForm.png";
+
 export default function SignupPageForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -100,7 +102,7 @@ export default function SignupPageForm() {
         <div className='max-w-md'>
           <div className='relative w-full h-80'>
             <Image
-              src='/public/placeholder.jpeg'
+              src={SignupIllustation}
               alt='Quiz illustration'
               fill
               className='object-contain'

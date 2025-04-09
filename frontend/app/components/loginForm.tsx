@@ -10,6 +10,8 @@ import { Eye, EyeOff, LogIn, BookOpen } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 
+import LoginIllustation from "../../public/loginForm.png";
+
 interface User {
   _id: string;
   name: string;
@@ -32,7 +34,7 @@ export default function LoginPageForm() {
   const { data: userData } = useQuery({
     queryKey: ["authUser"],
     queryFn: async () => {
-      const res = await fetch(`/api/user/profile/${name}`);
+      const res = await fetch(`/api/user/profile/${user?.name}`);
       const data = await res.json();
       return data;
     },
@@ -40,6 +42,8 @@ export default function LoginPageForm() {
 
   const callbackUrl =
     searchParams?.get("callbackUrl") || `/dashboard/${user?.name}`;
+
+  // console.log("Call back Url", user?.name);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -193,9 +197,9 @@ export default function LoginPageForm() {
       {/* Right side - Illustration */}
       <div className='hidden md:flex flex-1 justify-center items-center bg-pink-50 p-12'>
         <div className='max-w-md'>
-          <div className='relative w-full h-80'>
+          <div className='relative rounded-lg w-full h-80 overflow-hidden'>
             <Image
-              src='/placeholder.svg?height=400&width=400'
+              src={LoginIllustation}
               alt='Quiz illustration'
               fill
               className='object-contain'

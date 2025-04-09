@@ -68,6 +68,7 @@ export default function Navbar() {
   if (pathname?.startsWith("/auth/")) return null;
 
   const handleLogout = () => {
+    setMobileOpen(false);
     setDropdownOpen(!dropdownOpen);
     logout();
   };
