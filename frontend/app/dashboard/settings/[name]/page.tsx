@@ -74,7 +74,10 @@ export default function SettingsPage() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ ...formData, profilePicture: previewImage }),
+          body: JSON.stringify({
+            ...formData,
+            profilePicture: previewImage || undefined,
+          }),
         });
 
         const newData = await res.json();
@@ -111,7 +114,8 @@ export default function SettingsPage() {
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        setPreviewImage(reader.result as string);
+        setPreviewImage(reader.result as string); // Set the preview image
+        setFormData((prev) => ({ ...prev, profilePicture: file })); // Update profile picture in form data
       };
       reader.readAsDataURL(file);
     }
@@ -127,8 +131,12 @@ export default function SettingsPage() {
       data.append("newPassword", formData.newPassword);
     }
     data.append("favouriteTopic", formData.favouriteTopic);
+
+    // Append profilePicture only if it's not null or undefined
     if (formData.profilePicture) {
       data.append("profilePicture", formData.profilePicture);
+    } else if (previewImage) {
+      data.append("profilePicture", previewImage); // assuming previewImage is a string URL
     }
 
     // console.log(data);
@@ -150,8 +158,8 @@ export default function SettingsPage() {
       <h2 className='mb-4 font-bold text-2xl'>Settings</h2>
       <form onSubmit={handleSubmit} className='space-y-6'>
         {/* Profile Picture Upload */}
-        <div className='flex items-center space-x-4'>
-          <div className='relative border rounded-full w-20 h-20 overflow-hidden'>
+        <div className='flex sm:flex-row flex-col items-center gap-4 w-full'>
+          <div className='group relative shadow-md border-2 border-gray-300 rounded-full w-24 sm:w-20 h-24 sm:h-20 overflow-hidden transition-all duration-300'>
             {previewImage ? (
               <Image
                 src={previewImage}
@@ -160,12 +168,33 @@ export default function SettingsPage() {
                 className='object-cover'
               />
             ) : (
-              <div className='flex justify-center items-center bg-gray-100 w-full h-full text-gray-500'>
+              <div className='flex justify-center items-center bg-gradient-to-br from-gray-200 to-gray-100 w-full h-full font-semibold text-gray-600 text-4xl'>
                 {user?.name?.charAt(0)}
               </div>
             )}
+
+            {/* Overlay when hovering */}
+            <label className='absolute inset-0 flex justify-center items-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 backdrop-blur-sm font-medium text-white text-xs transition-opacity duration-300 cursor-pointer'>
+              Change
+              <input
+                type='file'
+                accept='image/*'
+                onChange={handleFileChange}
+                className='hidden'
+              />
+            </label>
           </div>
-          <input type='file' accept='image/*' onChange={handleFileChange} />
+
+          {/* Styled file input with dashed border */}
+          <label className='px-4 py-2 border-2 border-gray-400 hover:border-gray-600 border-dashed rounded-xl w-full sm:w-auto text-gray-600 hover:text-gray-800 text-sm transition duration-200 cursor-pointer'>
+            Upload a New Photo
+            <input
+              type='file'
+              accept='image/*'
+              onChange={handleFileChange}
+              className='hidden'
+            />
+          </label>
         </div>
 
         {/* Name Field */}

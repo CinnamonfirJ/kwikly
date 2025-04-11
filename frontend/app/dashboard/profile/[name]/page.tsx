@@ -74,7 +74,7 @@ export default function Profile() {
 
         <div className='mt-6'>
           <Link
-            href='/dashboard/settings'
+            href={`/dashboard/settings/${user?.name}`}
             className='bg-pink-500 hover:bg-pink-600 px-4 py-2 rounded-md text-white text-sm'
           >
             Edit Profile

@@ -54,20 +54,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const { data: getUserQuery } = useQuery({
+  const {
+    data: userData,
+    isLoading: userLoading,
+    isError: userError,
+  } = useQuery({
     queryKey: ["authUser"],
     queryFn: getUser,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
-    const storedUser = getUserQuery;
-
-    if (storedUser?.name !== undefined) {
-      console.log("User data:", storedUser.name);
-      setIsAuthenticated(true);
+    if (userLoading) {
+      setIsPending(true);
+      return;
     }
+
+    if (userError || !userData) {
+      setIsAuthenticated(false);
+      setIsPending(false);
+      return;
+    }
+
+    setIsAuthenticated(true);
     setIsPending(false);
-  }, [getUserQuery]);
+  }, [userLoading, userError, userData]);
+
+  // useEffect(() => {
+  //   const storedUser = getUserQuery;
+
+  //   if (storedUser?.name !== undefined) {
+  //     console.log("User data:", storedUser.name);
+  //     setIsAuthenticated(true);
+  //   }
+  //   setIsPending(false);
+  // }, [getUserQuery]);
 
   const logoutFn = async () => {
     try {
@@ -126,8 +148,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setError(null);
-      setIsAuthenticated(true);
-      login(credentials);
+      await loginFn(credentials); // await login inside signup
+      await queryClient.invalidateQueries({ queryKey: ["authUser"] });
 
       return data;
     } catch (error) {
@@ -169,7 +191,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setError(null);
-      setIsAuthenticated(true);
+      // Don't set isAuthenticated here
+      await queryClient.invalidateQueries({ queryKey: ["authUser"] });
 
       return data;
     } catch (error) {
@@ -186,10 +209,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       toast.error(error.message);
       setIsPending(false);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["authUser"] });
       setIsPending(false);
       toast.success("Login Successful");
-      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      // queryClient.invalidateQueries({ queryKey: ["authUser"] });
       console.log("Login Successful", isAuthenticated);
     },
   });

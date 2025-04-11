@@ -96,13 +96,27 @@ export const updateUserProfile = async (req, res) => {
     }
 
     if (profilePicture) {
-      if (user.profilePicture) {
+      let shouldUploadImage = true;
+      if (user.profilePicture == profilePicture) {
+        shouldUploadImage = false; // No need to upload again
+      } else if (user.profilePicture) {
+        // Delete the old image from Cloudinary
         await cloudinary.uploader.destroy(
           user.profilePicture.split("/").pop().split(".")[0]
         );
+        console.log(
+          "Deleted old image from Cloudinary",
+          user.profilePicture.split("/").pop().split(".")[0]
+        );
       }
-      const uploadedResponse = await cloudinary.uploader.upload(profilePicture);
-      profilePicture = uploadedResponse.secure_url;
+
+      if (shouldUploadImage) {
+        const uploadedResponse = await cloudinary.uploader.upload(
+          profilePicture
+        );
+        console.log("uploadedResponse", uploadedResponse.secure_url);
+        profilePicture = uploadedResponse.secure_url;
+      }
     }
 
     // Update XP and rank
@@ -143,7 +157,7 @@ export const saveQuizResult = async (req, res) => {
       timeLeft,
     } = req.body;
 
-    // Validate request data
+    // Validate required fields
     if (
       !userId ||
       !quizId ||
@@ -156,8 +170,8 @@ export const saveQuizResult = async (req, res) => {
       !subject ||
       !topic ||
       !duration ||
-      !selectedAnswers === undefined ||
-      !timeLeft
+      selectedAnswers === undefined || // ❗️ fix: don't use `!selectedAnswers === undefined`
+      timeLeft === undefined
     ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
@@ -167,35 +181,11 @@ export const saveQuizResult = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Check if the quiz was already completed
-    const existingQuiz = user.quizResults.find(
+    const existingQuizIndex = user.quizResults.findIndex(
       (result) => result.quizId === quizId
     );
 
-    if (existingQuiz) {
-      console.log(
-        "User has already completed this quiz before. Updating score if needed..."
-      );
-
-      // Optionally update the score if it's higher
-      if (score > existingQuiz.score) {
-        existingQuiz.score = score;
-        existingQuiz.passed = passed;
-      }
-
-      existingQuiz.code = code;
-      existingQuiz.selectedAnswers = selectedAnswers;
-      existingQuiz.timeLeft = timeLeft;
-      existingQuiz.completedAt = new Date();
-
-      await user.save();
-      return res.status(200).json({
-        message: "Quiz result updated, quizzesCompleted remains unchanged.",
-      });
-    }
-
-    // If the quiz is new, push the quiz result to the quizResults array
-    user.quizResults.push({
+    const quizResult = {
       quizId,
       score,
       passed,
@@ -208,17 +198,28 @@ export const saveQuizResult = async (req, res) => {
       duration,
       selectedAnswers,
       timeLeft,
-    });
+      completedAt: new Date(),
+    };
 
-    // Optionally increase quizzesCompleted if you need to track it
+    if (existingQuizIndex !== -1) {
+      // Update existing result
+      user.quizResults[existingQuizIndex] = {
+        ...user.quizResults[existingQuizIndex],
+        ...quizResult,
+      };
+
+      await user.save();
+      return res.status(200).json({ message: "Quiz result updated." });
+    }
+
+    // Add new result
+    user.quizResults.push(quizResult);
     user.quizzesCompleted += 1;
 
     await user.save();
-    return res
-      .status(201)
-      .json({ message: "Quiz result saved successfully.", user });
+    return res.status(201).json({ message: "Quiz result saved successfully." });
   } catch (error) {
-    console.error(error);
+    console.error("Error saving quiz result:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

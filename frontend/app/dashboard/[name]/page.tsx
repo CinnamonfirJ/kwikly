@@ -136,8 +136,9 @@ export default function Dashboard() {
       <div className='gap-8 grid md:grid-cols-3'>
         <div className='md:col-span-1'>
           <div className='bg-white shadow-sm p-6 border border-pink-100 rounded-xl'>
-            <div className='flex flex-row items-center gap-4 pb-4'>
-              <div className='relative border-4 border-pink-100 rounded-full w-16 h-16 overflow-hidden'>
+            {/* Profile Image and Name */}
+            <div className='flex lg:flex-row flex-col items-center gap-4 pb-4'>
+              <div className='relative border-4 border-pink-100 rounded-full w-20 h-20 overflow-hidden'>
                 {user?.profilePicture ? (
                   <Image
                     src={user?.profilePicture || "/images/placeholder.png"}
@@ -156,6 +157,7 @@ export default function Dashboard() {
                 <p className='text-gray-500 text-sm'>{user?.rank}</p>
               </div>
             </div>
+
             <div className='space-y-4'>
               <div className='space-y-2'>
                 <div className='flex justify-between items-center'>

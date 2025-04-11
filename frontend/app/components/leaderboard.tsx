@@ -58,18 +58,24 @@ export default function Leaderboard() {
       .substring(0, 2);
 
   return (
-    <div className='bg-white rounded-lg'>
+    <div className='bg-white shadow-sm rounded-xl'>
       <div className='p-4 border-pink-100 border-b'>
-        <h3 className='flex items-center font-semibold'>
+        <h3 className='flex items-center font-semibold text-gray-800 text-lg'>
           <Trophy className='mr-2 w-5 h-5 text-pink-500' />
           Top Kwiklys
         </h3>
       </div>
+
       <div className='p-4'>
         <div className='space-y-4'>
           {users.map((user, index) => (
-            <div key={user._id} className='flex justify-between items-center'>
+            <div
+              key={user._id}
+              className='flex sm:flex-row flex-col justify-between sm:items-center gap-2 sm:gap-4'
+            >
+              {/* Left Section: Rank + Avatar + Name */}
               <div className='flex items-center gap-3'>
+                {/* Rank */}
                 <div className='flex justify-center items-center bg-pink-100 rounded-full w-8 h-8 text-pink-500'>
                   {index === 0 ? (
                     <Trophy className='w-4 h-4' />
@@ -81,8 +87,10 @@ export default function Leaderboard() {
                     <span className='font-bold text-sm'>{index + 1}</span>
                   )}
                 </div>
+
+                {/* Avatar + Name */}
                 <div className='flex items-center gap-2'>
-                  <div className='relative rounded-full w-8 h-8 overflow-hidden'>
+                  <div className='relative rounded-full w-10 h-10 overflow-hidden'>
                     {user.profilePicture ? (
                       <Image
                         src={user.profilePicture || "/images/placeholder.png"}
@@ -96,25 +104,28 @@ export default function Leaderboard() {
                       </div>
                     )}
                   </div>
-                  <div className='flex justify-between items-center gap-5'>
-                    <span className='w-20 font-medium truncate'>
+
+                  <div className='flex flex-col'>
+                    <span className='font-medium text-gray-700 text-sm sm:text-base'>
                       {user.name}
                     </span>
-                    {/* Only show "Me" if this user is the logged-in user */}
+                    {/* Me Tag */}
                     {authUser?.name === user.name && (
-                      <span className='bg-pink-50 p-1 px-2 rounded-3xl font-medium text-pink-500 text-xs'>
+                      <span className='bg-pink-50 mt-0.5 px-2 py-0.5 rounded-2xl w-fit text-pink-500 text-xs'>
                         Me
                       </span>
                     )}
                   </div>
                 </div>
               </div>
-              <div className='hidden md:flex items-center gap-2'>
+
+              {/* Right Section: Level and XP */}
+              <div className='flex sm:flex-row flex-col sm:items-center sm:gap-3 ml-11 sm:ml-0 text-gray-600 text-sm'>
                 <div className='flex items-center text-pink-500'>
                   <Award className='mr-1 w-4 h-4' />
                   <span className='font-medium'>Lvl {user.level}</span>
                 </div>
-                <span className='text-gray-500 text-sm'>{user.xp} XP</span>
+                <span className='text-gray-500'>{user.xp} XP</span>
               </div>
             </div>
           ))}
