@@ -303,7 +303,7 @@ export default function MyQuizzesPage() {
                   </button>
                   <button
                     onClick={() => {
-                      const shareUrl = `${window.location.origin}/quiz-session/${quiz.code}`;
+                      const shareUrl = `${window.location.origin}/quiz-details/${quiz.code}`;
                       if (navigator.share) {
                         navigator.share({
                           title: quiz.title,
