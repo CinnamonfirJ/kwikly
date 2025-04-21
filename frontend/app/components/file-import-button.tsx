@@ -6,6 +6,9 @@ import { useState, useRef } from "react";
 import { Upload, FileText, AlertCircle } from "lucide-react";
 import { useToastContext } from "@/providers/toast-provider";
 import ConfirmationModal from "./confirmation-modal";
+import mammoth from "mammoth";
+import * as pdfjsLib from "pdfjs-dist";
+import type { TextItem } from "pdfjs-dist/types/src/display/api";
 
 interface FileImportButtonProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -189,6 +192,42 @@ export default function FileImportButton({ onImport }: FileImportButtonProps) {
     };
   };
 
+  // Needed for pdfjs to work in browser bundlers
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+  const readFileAsText = async (file: File): Promise<string> => {
+    const fileName = file.name.toLowerCase();
+
+    if (fileName.endsWith(".docx")) {
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      return result.value;
+    }
+
+    if (fileName.endsWith(".pdf")) {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = "";
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+
+        // Filter items to include only TextItem
+        const strings = content.items
+          .filter((item): item is TextItem => "str" in item) // Type guard to filter TextItem
+          .map((item) => item.str);
+
+        fullText += strings.join(" ") + "\n";
+      }
+
+      return fullText;
+    }
+
+    // Fallback for .txt, .csv, .json, etc.
+    return await file.text();
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -196,7 +235,13 @@ export default function FileImportButton({ onImport }: FileImportButtonProps) {
     setIsLoading(true);
 
     try {
-      const text = await file.text();
+      const text = await readFileAsText(file);
+      // Check if the file is empty
+      if (!text.trim()) {
+        toast.error(`File is empty or invalid format"}`);
+        throw new Error("File is empty or invalid format");
+      }
+
       let data;
 
       // Parse based on file type
@@ -204,9 +249,15 @@ export default function FileImportButton({ onImport }: FileImportButtonProps) {
         data = parseCSV(text);
       } else if (file.name.endsWith(".json")) {
         data = parseJSON(text);
-      } else {
-        // Assume plain text
+      } else if (file.name.endsWith(".docx")) {
         data = parsePlainText(text);
+      } else if (file.name.endsWith(".pdf")) {
+        data = parsePlainText(text);
+      } else if (file.name.endsWith(".txt")) {
+        data = parsePlainText(text);
+      } else {
+        toast.error(`Unsupported file type: ${file.name}`);
+        throw new Error("Unsupported file type");
       }
 
       onImport(data);
