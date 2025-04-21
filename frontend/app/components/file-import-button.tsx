@@ -152,7 +152,7 @@ export default function FileImportButton({ onImport }: FileImportButtonProps) {
     for (let i = 4; i < lines.length; i++) {
       const line = lines[i].trim();
 
-      if (line.startsWith("Q:") || line.startsWith(`Q${i}:`)) {
+      if (line.startsWith("Q:") || line.match(/^Q\d+:$/)) {
         // Save previous question if exists
         if (currentQuestion) {
           questions.push(currentQuestion);
