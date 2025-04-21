@@ -37,7 +37,7 @@ export default function CreateQuiz() {
   const [subject, setSubject] = useState("");
   const [topic, setTopic] = useState("");
   const [passingScore, setPassingScore] = useState(70);
-  const [duration, setDuration] = useState("30");
+  const [duration, setDuration] = useState("15 minutes");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [activeTab, setActiveTab] = useState("basic");
   const [isPublic, setIsPublic] = useState(true);
