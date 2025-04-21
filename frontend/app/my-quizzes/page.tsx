@@ -240,8 +240,7 @@ export default function MyQuizzesPage() {
                         <Brain className='mr-1 w-4 h-4' /> {quiz.topic}
                       </div>
                       <div className='flex items-center'>
-                        <Clock className='mr-1 w-4 h-4' /> {quiz.duration}{" "}
-                        minutes
+                        <Clock className='mr-1 w-4 h-4' /> {quiz.duration}
                       </div>
                       <div className='flex items-center'>
                         <Award className='mr-1 w-4 h-4 text-pink-500' />{" "}
