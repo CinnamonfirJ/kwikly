@@ -472,7 +472,14 @@ export default function EditQuiz() {
                   <label className='block font-medium text-gray-700 text-sm'>
                     Subject
                   </label>
-                  <select
+                  <input
+                    type='text'
+                    className='p-2 border border-gray-300 focus:border-pink-500 rounded-lg focus:outline-none focus:ring-pink-500 w-full'
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder='Enter subject name'
+                  />
+                  {/* <select
                     className='p-2 border border-gray-300 focus:border-pink-500 rounded-lg focus:outline-none focus:ring-pink-500 w-full'
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
@@ -485,7 +492,7 @@ export default function EditQuiz() {
                     <option value='Geography'>Geography</option>
                     <option value='Web Development'>Web Development</option>
                     <option value='Programming'>Programming</option>
-                  </select>
+                  </select> */}
                 </div>
                 <div className='space-y-2'>
                   <label className='block font-medium text-gray-700 text-sm'>
