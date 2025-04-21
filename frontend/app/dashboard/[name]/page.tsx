@@ -197,7 +197,7 @@ export default function Dashboard() {
                 </div>
                 <div className='flex flex-col justify-center items-center bg-pink-50 p-4 rounded-lg'>
                   <Trophy className='mb-2 w-6 h-6 text-pink-500' />
-                  <span className='font-bold text-xl'>3</span>
+                  <span className='font-bold text-xl'>0</span>
                   <span className='text-gray-500 text-xs'>Achievements</span>
                 </div>
               </div>
