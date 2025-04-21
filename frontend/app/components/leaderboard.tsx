@@ -120,7 +120,7 @@ export default function Leaderboard() {
               </div>
 
               {/* Right Section: Level and XP */}
-              <div className='flex sm:flex-row flex-col sm:items-center sm:gap-3 ml-11 sm:ml-0 text-gray-600 text-sm'>
+              <div className='flex sm:items-center gap-3 ml-11 sm:ml-0 text-gray-600 text-sm'>
                 <div className='flex items-center text-pink-500'>
                   <Award className='mr-1 w-4 h-4' />
                   <span className='font-medium'>Lvl {user.level}</span>
