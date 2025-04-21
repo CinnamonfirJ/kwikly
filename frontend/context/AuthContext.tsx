@@ -66,10 +66,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    if (userLoading) {
-      setIsPending(true);
-      return;
-    }
+    // if (userLoading) {
+    //   setIsPending(true);
+    //   return;
+    // }
 
     if (userError || !userData) {
       setIsAuthenticated(false);

@@ -302,7 +302,7 @@ export default function SignupPageForm() {
               className='flex justify-center items-center bg-pink-500 hover:bg-pink-600 disabled:opacity-70 px-4 py-3 rounded-lg w-full font-medium text-white transition-colors disabled:cursor-not-allowed'
             >
               {isPending ? (
-                <span className='flex items-center'>
+                <span className='flex items-center gap-3'>
                   <div className='flex justify-center items-center'>
                     <div className='border-amber-50 border-t-2 border-b-2 rounded-full w-5 h-5 animate-spin'></div>
                   </div>
