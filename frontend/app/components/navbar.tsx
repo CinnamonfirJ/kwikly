@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   BookOpen,
   Plus,
@@ -20,7 +20,6 @@ import { useAuthContext } from "@/context/AuthContext";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 
-// Types for QuizResult and User
 interface QuizResult {
   quizId: number;
   score: number;
@@ -28,7 +27,7 @@ interface QuizResult {
   completedAt: Date;
 }
 
-interface User {
+interface UserData {
   _id: string;
   name: string;
   email: string;
@@ -45,31 +44,30 @@ interface User {
 export default function Navbar() {
   const { isAuthenticated, logout } = useAuthContext();
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null>(null); // Initialize with `null`
-
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const { data: userData } = useQuery({
+  const { data: userData, isLoading: isUserLoading } = useQuery<UserData>({
     queryKey: ["authUser"],
     queryFn: async () => {
       const res = await fetch("/api/auth/user");
-      const data = await res.json();
-      return data;
+      if (!res.ok) {
+        throw new Error("Failed to fetch user data");
+      }
+      return res.json();
     },
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 
-  useEffect(() => {
-    if (userData) {
-      setUser(userData);
-    }
-  }, [userData]);
+  const user = userData;
 
   if (pathname?.startsWith("/auth/")) return null;
 
   const handleLogout = () => {
     setMobileOpen(false);
-    setDropdownOpen(!dropdownOpen);
+    setDropdownOpen(false);
     logout();
   };
 
@@ -81,12 +79,13 @@ export default function Navbar() {
       .toUpperCase()
       .substring(0, 2);
 
+  const showLoadingState = isUserLoading && isAuthenticated;
+
   return (
     <header className='top-0 z-50 sticky bg-white border-pink-100 border-b w-full'>
       <AnimatePresence>
         {mobileOpen && (
           <>
-            {/* Overlay */}
             <motion.div
               className='z-40 fixed inset-0 bg-black bg-opacity-50'
               initial={{ opacity: 0 }}
@@ -95,7 +94,6 @@ export default function Navbar() {
               onClick={() => setMobileOpen(false)}
             />
 
-            {/* Slide-in Menu */}
             <motion.div
               className='top-0 right-0 z-50 fixed flex flex-col gap-6 bg-white shadow-lg p-6 w-64 h-full'
               initial={{ x: "100%" }}
@@ -103,6 +101,13 @@ export default function Navbar() {
               exit={{ x: "100%" }}
               transition={{ type: "tween" }}
             >
+              <button
+                className='top-4 right-4 absolute text-gray-500 hover:text-gray-700'
+                onClick={() => setMobileOpen(false)}
+              >
+                <X className='w-6 h-6' />
+              </button>
+
               <Link
                 href='/quizzes'
                 className='font-medium text-pink-500'
@@ -111,7 +116,7 @@ export default function Navbar() {
                 Browse Quizzes
               </Link>
 
-              {isAuthenticated && (
+              {isAuthenticated && user ? (
                 <>
                   <Link
                     href='/my-quizzes'
@@ -121,7 +126,7 @@ export default function Navbar() {
                     My Quizzes
                   </Link>
                   <Link
-                    href={`/dashboard/${user?.name}`}
+                    href={`/dashboard/${user.name}`}
                     className='font-medium text-pink-500'
                     onClick={() => setMobileOpen(false)}
                   >
@@ -142,9 +147,7 @@ export default function Navbar() {
                     Logout
                   </button>
                 </>
-              )}
-
-              {!isAuthenticated && (
+              ) : (
                 <Link
                   href='/auth/login'
                   className='font-medium text-pink-500'
@@ -174,7 +177,7 @@ export default function Navbar() {
           >
             Browse Quizzes
           </Link>
-          {isAuthenticated && (
+          {isAuthenticated && user && (
             <>
               <Link
                 href='/my-quizzes'
@@ -183,7 +186,7 @@ export default function Navbar() {
                 My Quizzes
               </Link>
               <Link
-                href={`/dashboard/${user?.name}`}
+                href={`/dashboard/${user.name}`}
                 className='font-medium text-gray-600 hover:text-pink-500 text-sm transition-colors'
               >
                 Dashboard
@@ -193,7 +196,12 @@ export default function Navbar() {
         </nav>
 
         <div className='relative flex items-center gap-2'>
-          {isAuthenticated ? (
+          {showLoadingState ? (
+            <div className='flex items-center'>
+              <div className='mr-2 border-pink-500 border-t-2 border-b-2 rounded-full w-5 h-5 animate-spin'></div>
+              <span className='text-gray-700 text-sm'>Loading...</span>
+            </div>
+          ) : isAuthenticated && user ? (
             <>
               <Link
                 href='/create-quiz'
@@ -207,21 +215,20 @@ export default function Navbar() {
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className='relative border-2 border-pink-100 hover:border-pink-200 rounded-full focus:outline-none w-9 h-9 overflow-hidden transition-all'
               >
-                {user?.profilePicture ? (
+                {user.profilePicture ? (
                   <Image
-                    src={user?.profilePicture || "/images/placeholder.png"}
-                    alt={user?.name}
+                    src={user.profilePicture}
+                    alt={user.name}
                     fill
                     className='object-cover'
                   />
                 ) : (
                   <div className='flex justify-center items-center bg-pink-50 w-full h-full font-medium text-pink-500 text-sm'>
-                    {getInitials(user?.name || "")}
+                    {getInitials(user.name)}
                   </div>
                 )}
               </button>
 
-              {/* Mobile menu button */}
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
                 className='md:hidden z-50 hover:bg-pink-50 p-2 border border-pink-100 rounded-full text-pink-500 transition'
@@ -234,17 +241,17 @@ export default function Navbar() {
               </button>
 
               {dropdownOpen && (
-                <div className='top-0 right-10 absolute bg-white shadow-lg mt-2 border border-gray-200 rounded-lg w-56'>
+                <div className='top-full right-0 absolute bg-white shadow-lg mt-2 border border-gray-200 rounded-lg w-56'>
                   <div className='p-3'>
-                    <p className='font-medium text-sm'>{user?.name}</p>
-                    <p className='text-gray-500 text-xs'>{user?.email}</p>
+                    <p className='font-medium text-sm'>{user.name}</p>
+                    <p className='text-gray-500 text-xs'>{user.email}</p>
                   </div>
                   <hr className='border-gray-200' />
                   <ul className='py-2'>
                     <li>
                       <Link
-                        href={`/dashboard/${user?.name}`}
-                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                        href={`/dashboard/${user.name}`}
+                        onClick={() => setDropdownOpen(false)}
                         className='block hover:bg-gray-100 px-4 py-2 text-gray-700 text-sm'
                       >
                         <LayoutDashboard className='inline-block mr-2 w-4 h-4' />{" "}
@@ -253,8 +260,8 @@ export default function Navbar() {
                     </li>
                     <li>
                       <Link
-                        href={`/dashboard/profile/${user?.name}`}
-                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                        href={`/dashboard/profile/${user.name}`}
+                        onClick={() => setDropdownOpen(false)}
                         className='block hover:bg-gray-100 px-4 py-2 text-gray-700 text-sm'
                       >
                         <User className='inline-block mr-2 w-4 h-4' /> Profile
@@ -262,8 +269,8 @@ export default function Navbar() {
                     </li>
                     <li>
                       <Link
-                        href={`/dashboard/settings/${user?.name}`}
-                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                        href={`/dashboard/settings/${user.name}`}
+                        onClick={() => setDropdownOpen(false)}
                         className='block hover:bg-gray-100 px-4 py-2 text-gray-700 text-sm'
                       >
                         <Settings className='inline-block mr-2 w-4 h-4' />{" "}
