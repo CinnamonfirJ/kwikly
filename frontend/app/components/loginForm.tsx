@@ -43,14 +43,17 @@ export default function LoginPageForm() {
     staleTime: 1000 * 60 * 10,
   });
 
-  const callbackUrl =
-    searchParams?.get("callbackUrl") || `/dashboard/${user?.name || ""}`;
+  const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
 
   useEffect(() => {
     if (isAuthenticated && !isPending) {
-      router.push(callbackUrl);
+      if (user?.name) {
+        router.push(`/dashboard/${user.name}`);
+      } else {
+        router.push(callbackUrl);
+      }
     }
-  }, [isAuthenticated, isPending, router, callbackUrl]);
+  }, [isAuthenticated, isPending, router, callbackUrl, user?.name]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
