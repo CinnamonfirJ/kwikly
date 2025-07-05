@@ -62,9 +62,7 @@ export default function LoginPageForm() {
       <div className='flex justify-center items-center min-h-screen'>
         <div className='flex justify-center items-center'>
           <div className='border-pink-500 border-t-2 border-b-2 rounded-full w-8 h-8 animate-spin'></div>
-          <span className='ml-3 text-gray-700 text-lg'>
-            Loading authentication...
-          </span>
+          <span className='ml-3 text-gray-700 text-lg'>Loading...</span>
         </div>
       </div>
     );

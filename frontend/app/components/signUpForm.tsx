@@ -95,6 +95,17 @@ export default function SignupPageForm() {
 
   const passwordStrength = getPasswordStrength(password);
 
+  if (isPending && !isAuthenticated) {
+    return (
+      <div className='flex justify-center items-center min-h-screen'>
+        <div className='flex justify-center items-center'>
+          <div className='border-pink-500 border-t-2 border-b-2 rounded-full w-8 h-8 animate-spin'></div>
+          <span className='ml-3 text-gray-700 text-lg'>Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className='flex md:flex-row flex-col min-h-screen'>
       {/* Left side - Illustration */}
