@@ -105,6 +105,7 @@ export default function EditQuiz() {
   const [isPublic, setIsPublic] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [code, setCode] = useState("");
+  const [initialized, setInitialized] = useState(false);
 
   // Fetch quiz data if not in cache
   const fetchQuizData = useCallback(async () => {
@@ -143,36 +144,39 @@ export default function EditQuiz() {
 
   // Get quiz data from cache
   useEffect(() => {
-    const quizData = queryClient.getQueryData<Quiz>(["userResults"]);
+    if (!initialized) {
+      const quizData = queryClient.getQueryData<Quiz>(["userResults"]);
 
-    if (quizData && quizData.quiz) {
-      const quiz = quizData.quiz;
+      if (quizData && quizData.quiz) {
+        const quiz = quizData.quiz;
 
-      // Populate form with quiz data
-      setQuizTitle(quiz.title);
-      setQuizInstructions(quiz.instruction);
-      setSubject(quiz.subject);
-      setTopic(quiz.topic);
-      setPassingScore(quiz.passingScore);
-      setDuration(quiz.duration);
-      setIsPublic(quiz.isPublic);
-      setCode(quiz.code);
+        // Populate form with quiz data
+        setQuizTitle(quiz.title);
+        setQuizInstructions(quiz.instruction);
+        setSubject(quiz.subject);
+        setTopic(quiz.topic);
+        setPassingScore(quiz.passingScore);
+        setDuration(quiz.duration);
+        setIsPublic(quiz.isPublic);
+        setCode(quiz.code);
 
-      // Transform questions to match the expected format
-      const formattedQuestions = quiz.questions.map((q) => ({
-        id: q.id.toString(),
-        questionText: q.questionText,
-        options: q.options,
-        correctAnswer: q.correctAnswer,
-        points: q.points,
-        _id: q._id,
-      }));
+        // Transform questions to match the expected format
+        const formattedQuestions = quiz.questions.map((q) => ({
+          id: q.id.toString(),
+          questionText: q.questionText,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          points: q.points,
+          _id: q._id,
+        }));
 
-      setQuestions(formattedQuestions);
-      setIsLoading(false);
-    } else {
-      // If quiz data is not in cache, fetch it from the API
-      fetchQuizData();
+        setQuestions(formattedQuestions);
+        setInitialized(true);
+        setIsLoading(false);
+      } else {
+        // If quiz data is not in cache, fetch it from the API
+        fetchQuizData().then(() => setInitialized(true));
+      }
     }
   }, [quizId, queryClient, fetchQuizData]);
 
@@ -251,7 +255,8 @@ export default function EditQuiz() {
     },
     onSuccess: () => {
       toast.success("Quiz updated successfully!");
-      queryClient.invalidateQueries({ queryKey: ["userResults"] });
+      queryClient.removeQueries({ queryKey: ["userResults"] });
+      // queryClient.invalidateQueries({ queryKey: ["userResults"] });
       router.push("/my-quizzes");
     },
     onError: (error: unknown) => {
