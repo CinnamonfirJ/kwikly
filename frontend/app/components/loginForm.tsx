@@ -8,15 +8,14 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, LogIn, BookOpen } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
-import { useQuery } from "@tanstack/react-query";
 
 import LoginIllustation from "../../public/loginForm.png";
 
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-}
+// interface User {
+//   _id: string;
+//   name: string;
+//   email: string;
+// }
 
 export default function LoginPageForm() {
   const [email, setEmail] = useState("");
@@ -24,44 +23,30 @@ export default function LoginPageForm() {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const [user, setUser] = useState<User | null>(null); // Initialize with `null`
-
-  const { login, error, isAuthenticated, isError, isPending } =
+  const { login, error, isAuthenticated, isError, isPending, user } =
     useAuthContext();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { data: userData } = useQuery({
-    queryKey: ["authUser"],
-    queryFn: async () => {
-      const res = await fetch(`/api/user/profile/${user?.name}`);
-      const data = await res.json();
-      return data;
-    },
-  });
+  const initialCallbackUrl = searchParams?.get("callbackUrl");
 
-  const callbackUrl =
-    searchParams?.get("callbackUrl") || `/dashboard/${user?.name}`;
-
-  // console.log("Call back Url", user?.name);
-
-  // Redirect if already authenticated
   useEffect(() => {
-    if (userData) {
-      setUser(userData);
-    }
+    if (isAuthenticated && !isPending) {
+      let redirectPath = "/dashboard";
 
-    if (isAuthenticated) {
-      router.push(callbackUrl);
+      if (initialCallbackUrl) {
+        redirectPath = initialCallbackUrl;
+      } else if (user?.name) {
+        redirectPath = `/dashboard/${user.name}`;
+      }
+
+      router.push(redirectPath);
     }
-  }, [isAuthenticated, router, callbackUrl, userData]);
+  }, [isAuthenticated, isPending, router, initialCallbackUrl, user?.name]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const formData = { email, password };
-
-    login(formData);
+    login({ email, password });
   };
 
   if (isPending && !isAuthenticated) {
@@ -77,7 +62,6 @@ export default function LoginPageForm() {
 
   return (
     <div className='flex md:flex-row flex-col min-h-screen'>
-      {/* Left side - Form */}
       <div className='flex flex-col flex-1 justify-center items-center p-8 md:p-12'>
         <div className='w-full max-w-md'>
           <div className='mb-8 text-center'>
@@ -205,7 +189,6 @@ export default function LoginPageForm() {
         </div>
       </div>
 
-      {/* Right side - Illustration */}
       <div className='hidden md:flex flex-1 justify-center items-center bg-pink-50 p-12'>
         <div className='max-w-md'>
           <div className='relative rounded-lg w-full h-80 overflow-hidden'>
