@@ -81,6 +81,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsPending(false);
   }, [userLoading, userError, userData]);
 
+  useEffect(() => {
+    getUser();
+  }, []);
+
   // useEffect(() => {
   //   const storedUser = getUserQuery;
 

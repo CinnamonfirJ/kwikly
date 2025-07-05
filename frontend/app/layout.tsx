@@ -33,16 +33,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ReactQueryProvider>
-          <RankProvider>
-            <ToastProvider>
-              <AuthProvider>
+        <AuthProvider>
+          <ReactQueryProvider>
+            <RankProvider>
+              <ToastProvider>
                 <Navbar />
                 {children}
-              </AuthProvider>
-            </ToastProvider>
-          </RankProvider>
-        </ReactQueryProvider>
+              </ToastProvider>
+            </RankProvider>
+          </ReactQueryProvider>
+        </AuthProvider>
       </body>
     </html>
   );
