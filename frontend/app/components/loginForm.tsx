@@ -24,49 +24,54 @@ export default function LoginPageForm() {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const [user, setUser] = useState<User | null>(null); // Initialize with `null`
-
-  const { login, error, isAuthenticated, isError, isPending } =
+  const { login, error, isAuthenticated, isError, isPending, user } =
     useAuthContext();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { data: userData } = useQuery({
-    queryKey: ["authUser"],
+  useQuery<User | null>({
+    queryKey: ["userProfile", user?.name],
     queryFn: async () => {
-      const res = await fetch(`/api/user/profile/${user?.name}`);
+      if (!user?.name) return null;
+      const res = await fetch(`/api/user/profile/${user.name}`);
+      if (res.status === 404) return null;
       const data = await res.json();
-      return data;
+      if (!res.ok) throw new Error(data.message || "Failed to fetch profile");
+      return data.user;
     },
+    enabled: !!user?.name,
+    staleTime: 1000 * 60 * 10,
   });
 
   const callbackUrl =
-    searchParams?.get("callbackUrl") || `/dashboard/${user?.name}`;
+    searchParams?.get("callbackUrl") || `/dashboard/${user?.name || ""}`;
 
-  // console.log("Call back Url", user?.name);
-
-  // Redirect if already authenticated
   useEffect(() => {
-    if (userData) {
-      setUser(userData);
-    }
-
-    if (isAuthenticated) {
+    if (isAuthenticated && !isPending) {
       router.push(callbackUrl);
     }
-  }, [isAuthenticated, router, callbackUrl, userData]);
+  }, [isAuthenticated, isPending, router, callbackUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const formData = { email, password };
-
-    login(formData);
+    login({ email, password });
   };
+
+  if (isPending && !isAuthenticated) {
+    return (
+      <div className='flex justify-center items-center min-h-screen'>
+        <div className='flex justify-center items-center'>
+          <div className='border-pink-500 border-t-2 border-b-2 rounded-full w-8 h-8 animate-spin'></div>
+          <span className='ml-3 text-gray-700 text-lg'>
+            Loading authentication...
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='flex md:flex-row flex-col min-h-screen'>
-      {/* Left side - Form */}
       <div className='flex flex-col flex-1 justify-center items-center p-8 md:p-12'>
         <div className='w-full max-w-md'>
           <div className='mb-8 text-center'>
@@ -194,7 +199,6 @@ export default function LoginPageForm() {
         </div>
       </div>
 
-      {/* Right side - Illustration */}
       <div className='hidden md:flex flex-1 justify-center items-center bg-pink-50 p-12'>
         <div className='max-w-md'>
           <div className='relative rounded-lg w-full h-80 overflow-hidden'>
