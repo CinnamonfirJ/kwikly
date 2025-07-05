@@ -11,11 +11,11 @@ import { useAuthContext } from "@/context/AuthContext";
 
 import LoginIllustation from "../../public/loginForm.png";
 
-// interface User {
-//   _id: string;
-//   name: string;
-//   email: string;
-// }
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+}
 
 export default function LoginPageForm() {
   const [email, setEmail] = useState("");
@@ -28,21 +28,35 @@ export default function LoginPageForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const initialCallbackUrl = searchParams?.get("callbackUrl");
+  const rawCallbackUrl = searchParams?.get("callbackUrl");
+  const decodedCallbackUrl = rawCallbackUrl
+    ? decodeURIComponent(rawCallbackUrl)
+    : null;
 
   useEffect(() => {
     if (isAuthenticated && !isPending) {
       let redirectPath = "/dashboard";
 
-      if (initialCallbackUrl) {
-        redirectPath = initialCallbackUrl;
-      } else if (user?.name) {
-        redirectPath = `/dashboard/${user.name}`;
+      if (decodedCallbackUrl) {
+        redirectPath = decodedCallbackUrl;
+      } else if ((user as User)?.name) {
+        redirectPath = `/dashboard/${(user as User).name}`;
       }
 
-      router.push(redirectPath);
+      try {
+        const url = new URL(redirectPath, window.location.origin);
+        router.push(url.pathname + url.search + url.hash);
+      } catch {
+        router.push(redirectPath);
+      }
     }
-  }, [isAuthenticated, isPending, router, initialCallbackUrl, user?.name]);
+  }, [
+    isAuthenticated,
+    isPending,
+    router,
+    decodedCallbackUrl,
+    (user as User)?.name,
+  ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
