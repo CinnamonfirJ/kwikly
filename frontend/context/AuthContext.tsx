@@ -5,18 +5,11 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToastContext } from "@/providers/toast-provider";
 
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-}
-
 interface AuthContextType {
   isAuthenticated: boolean;
   isPending: boolean;
   isError: boolean;
   error: Error | null;
-  user: User | null;
   signup: (credentials: {
     name: string;
     email: string;
@@ -31,7 +24,6 @@ const AuthContext = createContext<AuthContextType>({
   isPending: true,
   isError: false,
   error: null,
-  user: null,
   signup: async () => {},
   login: async () => {},
   logout: () => {},
@@ -39,152 +31,196 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isPending, setIsPending] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
   const toast = useToastContext();
+
   const queryClient = useQueryClient();
 
-  const fetchUser = async (): Promise<User | null> => {
+  const getUser = async () => {
     try {
       const res = await fetch("/api/auth/user");
-      if (res.status === 401) {
-        return null;
-      }
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message || "Failed to fetch user");
+        throw new Error(data.message || "Couldn't get User");
       }
-      return data.user;
+      setIsAuthenticated(true);
+      return data;
     } catch (error) {
-      console.error("Error fetching user:", error);
-      return null;
+      throw error;
     }
   };
 
   const {
     data: userData,
     isLoading: userLoading,
-    isError: userErrorFetching,
-    error: userErrorObject,
-    // isFetched,
-  } = useQuery<User | null, Error>({
+    isError: userError,
+  } = useQuery({
     queryKey: ["authUser"],
-    queryFn: fetchUser,
+    queryFn: getUser,
     retry: false,
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5,
   });
 
-  const isAuthenticated = !!userData;
-  const isError = userErrorFetching;
-  const error = userErrorObject;
+  useEffect(() => {
+    // if (userLoading) {
+    //   setIsPending(true);
+    //   return;
+    // }
 
-  const [isPending, setIsPending] = useState(true);
-
-  // --- Auth Mutations ---
-
-  // Declare loginFn and its mutation first
-  const loginFn = async (credentials: { email: string; password: string }) => {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(credentials),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || "Login failed");
+    if (userError || !userData) {
+      setIsAuthenticated(false);
+      setIsPending(false);
+      return;
     }
-    return data;
+
+    setIsAuthenticated(true);
+    setIsPending(false);
+  }, [userLoading, userError, userData]);
+
+  useEffect(() => {
+    getUser();
+  }, []);
+
+  // useEffect(() => {
+  //   const storedUser = getUserQuery;
+
+  //   if (storedUser?.name !== undefined) {
+  //     console.log("User data:", storedUser.name);
+  //     setIsAuthenticated(true);
+  //   }
+  //   setIsPending(false);
+  // }, [getUserQuery]);
+
+  const logoutFn = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Couldn't get User");
+      }
+      router.push("/");
+      setIsAuthenticated(false);
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
   };
 
-  const { mutate: loginMutate, isPending: isLoginPending } = useMutation({
-    mutationFn: loginFn,
+  const { mutate: LogoutMutate } = useMutation({
+    mutationFn: logoutFn,
     onMutate: () => setIsPending(true),
-    onError: (err: Error) => {
-      toast.error(err.message);
+    onError: (error: Error) => {
+      setIsError(true);
+      setError(error);
+      toast.error(error.message);
       setIsPending(false);
     },
-    onSuccess: async () => {
-      toast.success("Login Successful");
-      await queryClient.invalidateQueries({ queryKey: ["authUser"] });
-    },
-    onSettled: () => {
+    onSuccess: () => {
       setIsPending(false);
+      toast.success("Logout Successful");
+      console.log("Logout Successful", isAuthenticated);
     },
   });
 
-  // Now declare signupFn and its mutation
   const signupFn = async (credentials: {
     name: string;
     email: string;
     password: string;
   }) => {
-    const res = await fetch("/api/auth/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(credentials),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || "Signup failed");
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Signup failed");
+      }
+
+      setError(null);
+      await loginFn(credentials); // await login inside signup
+      await queryClient.invalidateQueries({ queryKey: ["authUser"] });
+
+      return data;
+    } catch (error) {
+      throw error;
     }
-    return data;
   };
 
-  const { mutate: signupMutate, isPending: isSignupPending } = useMutation({
+  const { mutate: signupMutate } = useMutation({
     mutationFn: signupFn,
     onMutate: () => setIsPending(true),
-    onError: (err: Error) => {
-      toast.error(err.message);
-      setIsPending(false);
-    },
-    onSuccess: async (data, variables) => {
-      toast.success("Signup Successful");
-      await loginFn(variables); // loginFn is now declared and accessible
-      await queryClient.invalidateQueries({ queryKey: ["authUser"] });
-    },
-    onSettled: () => {
-      setIsPending(false);
-    },
-  });
-
-  const logoutFn = async () => {
-    const res = await fetch("/api/auth/logout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || "Logout failed");
-    }
-    return data;
-  };
-
-  const { mutate: logoutMutate, isPending: isLogoutPending } = useMutation({
-    mutationFn: logoutFn,
-    onMutate: () => {
-      setIsPending(true);
-      queryClient.setQueryData(["authUser"], null);
-    },
-    onError: (err: Error) => {
-      toast.error(err.message);
+    onError: (error: Error) => {
+      setIsError(true);
+      setError(error);
+      toast.error(error.message);
       setIsPending(false);
     },
     onSuccess: () => {
-      toast.success("Logout Successful");
-      router.push("/");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      toast.success("Signup Successful");
       setIsPending(false);
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      console.log("Login Successful", isAuthenticated);
     },
   });
 
-  // Combine pending states
-  const overallPending =
-    isLoginPending || isSignupPending || isLogoutPending || userLoading;
+  const loginFn = async (credentials: { email: string; password: string }) => {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+      });
 
-  useEffect(() => {
-    setIsPending(overallPending);
-  }, [overallPending]);
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      setError(null);
+      // Don't set isAuthenticated here
+      await queryClient.invalidateQueries({ queryKey: ["authUser"] });
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const { mutate: LoginMutate } = useMutation({
+    mutationFn: loginFn,
+    onMutate: () => setIsPending(true),
+    onError: (error: Error) => {
+      setIsError(true);
+      setError(error);
+      toast.error(error.message);
+      setIsPending(false);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      setIsPending(false);
+      toast.success("Login Successful");
+      // queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      console.log("Login Successful", isAuthenticated);
+    },
+  });
 
   const signup = (credentials: {
     name: string;
@@ -195,11 +231,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = (credentials: { email: string; password: string }) => {
-    loginMutate(credentials);
+    LoginMutate(credentials);
   };
 
   const logout = () => {
-    logoutMutate();
+    LogoutMutate();
   };
 
   return (
@@ -212,7 +248,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         isError,
         error,
-        user: userData || null,
       }}
     >
       {children}
