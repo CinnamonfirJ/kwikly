@@ -24,40 +24,44 @@ export default function LoginPageForm() {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const { login, error, isAuthenticated, isError, isPending, user } =
+  const [user, setUser] = useState<User | null>(null); // Initialize with `null`
+
+  const { login, error, isAuthenticated, isError, isPending } =
     useAuthContext();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  useQuery<User | null>({
-    queryKey: ["userProfile", user?.name],
+  const { data: userData } = useQuery({
+    queryKey: ["authUser"],
     queryFn: async () => {
-      if (!user?.name) return null;
-      const res = await fetch(`/api/user/profile/${user.name}`);
-      if (res.status === 404) return null;
+      const res = await fetch(`/api/user/profile/${user?.name}`);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to fetch profile");
-      return data.user;
+      return data;
     },
-    enabled: !!user?.name,
-    staleTime: 1000 * 60 * 10,
   });
 
-  const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
+  const callbackUrl =
+    searchParams?.get("callbackUrl") || `/dashboard/${user?.name}`;
 
+  // console.log("Call back Url", user?.name);
+
+  // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated && !isPending) {
-      if (user?.name) {
-        router.push(`/dashboard/${user.name}`);
-      } else {
-        router.push(callbackUrl);
-      }
+    if (userData) {
+      setUser(userData);
     }
-  }, [isAuthenticated, isPending, router, callbackUrl, user?.name]);
+
+    if (isAuthenticated) {
+      router.push(callbackUrl);
+    }
+  }, [isAuthenticated, router, callbackUrl, userData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login({ email, password });
+
+    const formData = { email, password };
+
+    login(formData);
   };
 
   if (isPending && !isAuthenticated) {
@@ -73,6 +77,7 @@ export default function LoginPageForm() {
 
   return (
     <div className='flex md:flex-row flex-col min-h-screen'>
+      {/* Left side - Form */}
       <div className='flex flex-col flex-1 justify-center items-center p-8 md:p-12'>
         <div className='w-full max-w-md'>
           <div className='mb-8 text-center'>
@@ -200,6 +205,7 @@ export default function LoginPageForm() {
         </div>
       </div>
 
+      {/* Right side - Illustration */}
       <div className='hidden md:flex flex-1 justify-center items-center bg-pink-50 p-12'>
         <div className='max-w-md'>
           <div className='relative rounded-lg w-full h-80 overflow-hidden'>
