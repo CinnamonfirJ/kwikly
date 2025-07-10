@@ -20,7 +20,7 @@ export const getTopUsers = async (req, res) => {
   try {
     const users = await User.find()
       .sort({ xp: -1 })
-      .limit(5)
+      .limit(20)
       .select("-password");
 
     res.status(200).json({
