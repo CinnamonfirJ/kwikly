@@ -128,7 +128,13 @@ export default function CreateQuiz() {
 
     // Calculate maxScore and xpReward
     const maxScore = questions.reduce((total, q) => total + q.points, 0);
-    const xpReward = Math.floor(maxScore * 0.5);
+    let xpReward;
+    if (maxScore < 2500) {
+      xpReward = Math.floor(maxScore * 1.5);
+    } else {
+      xpReward = Math.floor(maxScore * 1.5 + 100);
+    }
+    // const xpReward = Math.floor(maxScore * 1.5);
 
     // Prepare quiz data for submission
     const quizData: QuizData = {
