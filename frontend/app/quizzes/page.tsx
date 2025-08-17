@@ -13,6 +13,11 @@ import {
   Share2,
   Copy,
   User,
+  Sparkles,
+  TrendingUp,
+  Star,
+  Hash,
+  Zap,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
@@ -32,7 +37,6 @@ interface User {
   rank: string;
   level: number;
   xp: number;
-  // quizResults: any[]; // Replace with a proper type if needed
   createdAt: string;
   updatedAt: string;
   __v: number;
@@ -68,7 +72,6 @@ interface Quiz {
 }
 
 export default function QuizzesPage() {
-  // const router = useRouter();
   const searchParams = useSearchParams();
   const codeParam = searchParams.get("code");
 
@@ -148,168 +151,263 @@ export default function QuizzesPage() {
     setTimeout(() => setCopiedCode(""), 2000);
   };
 
+  // Get subject color based on subject name
+  const getSubjectColor = (subject: string) => {
+    const colors = {
+      Mathematics: "from-blue-500 to-blue-600",
+      Science: "from-green-500 to-green-600",
+      English: "from-purple-500 to-purple-600",
+      History: "from-amber-500 to-amber-600",
+      Geography: "from-emerald-500 to-emerald-600",
+      Technology: "from-indigo-500 to-indigo-600",
+      "Computer Science": "from-cyan-500 to-cyan-600",
+      "Network Technology": "from-violet-500 to-violet-600",
+      "Department of Computer Engineering": "from-rose-500 to-rose-600",
+      "Human-Computer Interaction": "from-teal-500 to-teal-600",
+      "Computer Engineering": "from-orange-500 to-orange-600",
+      "Network Technology III": "from-slate-500 to-slate-600",
+      "Network Technology I & II": "from-lime-500 to-lime-600",
+      "COEN 348": "from-fuchsia-500 to-fuchsia-600",
+    };
+    return (
+      colors[subject as keyof typeof colors] || "from-pink-500 to-pink-600"
+    );
+  };
+
   return (
-    <div className='mx-auto px-4 md:px-6 py-8 md:py-12 max-w-6xl container'>
-      <div className='flex md:flex-row flex-col justify-between items-start md:items-center mb-8'>
-        <div>
-          <h1 className='mb-2 font-bold text-3xl'>Browse Quizzes</h1>
-          <p className='text-gray-500'>
-            Find quizzes by searching or enter a quiz code to join a specific
-            quiz.
-          </p>
-        </div>
-        <Link
-          href='/my-quizzes'
-          className='inline-flex justify-center items-center bg-pink-500 hover:bg-pink-600 mt-4 md:mt-0 px-4 py-2 rounded-full font-medium text-white transition-colors'
-        >
-          My Quizzes
-        </Link>
+    <div className='bg-gradient-to-br from-slate-50 via-white to-pink-50/30 min-h-screen'>
+      {/* Background Pattern */}
+      <div className='absolute inset-0 opacity-5 pointer-events-none'>
+        <div
+          className='top-0 left-0 absolute w-full h-full'
+          style={{
+            backgroundImage: `radial-gradient(circle at 25% 25%, #ec4899 1px, transparent 1px)`,
+            backgroundSize: "40px 40px",
+          }}
+        ></div>
       </div>
 
-      <div className='flex md:flex-row flex-col gap-4 mb-8'>
-        <div className='relative flex-1'>
-          <div className='left-0 absolute inset-y-0 flex items-center pl-3 pointer-events-none'>
-            <Search className='w-5 h-5 text-gray-400' />
+      <div className='relative mx-auto px-4 md:px-6 py-8 md:py-12 max-w-6xl container'>
+        {/* Enhanced Header */}
+        <div className='flex md:flex-row flex-col justify-between items-start md:items-center mb-12'>
+          <div className='space-y-4'>
+            <div className='inline-flex items-center bg-gradient-to-r from-pink-100 to-purple-100 px-4 py-2 border border-pink-200/50 rounded-full font-medium text-pink-600 text-sm'>
+              <TrendingUp className='mr-2 w-4 h-4' />
+              Discover & Learn
+            </div>
+            <h1 className='bg-clip-text bg-gradient-to-r from-gray-900 to-gray-700 font-bold text-transparent text-4xl md:text-5xl tracking-tight'>
+              Browse Quizzes
+            </h1>
+            <p className='max-w-2xl text-gray-600 text-lg leading-relaxed'>
+              Discover engaging quizzes across various subjects or enter a quiz
+              code to join a specific challenge.
+            </p>
           </div>
-          <input
-            type='text'
-            className='py-2 pr-4 pl-10 border border-pink-100 focus:border-pink-500 rounded-full focus:outline-none focus:ring-pink-500 w-full'
-            placeholder='Search by title, creator, or enter quiz code...'
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        <div className='relative w-full md:w-64'>
-          <div className='left-0 absolute inset-y-0 flex items-center pl-3 pointer-events-none'>
-            <Filter className='w-5 h-5 text-gray-400' />
-          </div>
-          <select
-            className='py-2 pr-4 pl-10 border border-pink-100 focus:border-pink-500 rounded-full focus:outline-none focus:ring-pink-500 w-full appearance-none'
-            value={selectedSubject}
-            onChange={(e) => setSelectedSubject(e.target.value)}
+          <Link
+            href='/my-quizzes'
+            className='group inline-flex relative justify-center items-center bg-gradient-to-r from-pink-500 hover:from-pink-600 to-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl mt-6 md:mt-0 px-6 py-3 rounded-full overflow-hidden font-semibold text-white hover:scale-105 transition-all duration-300 transform'
           >
-            <option value=''>All Subjects</option>
-            {subjects.map((subject) => (
-              <option key={subject} value={subject}>
-                {subject}
-              </option>
-            ))}
-          </select>
+            <div className='absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transition-transform translate-x-[-100%] group-hover:translate-x-[100%] duration-700'></div>
+            <Star className='mr-2 w-4 h-4' />
+            My Quizzes
+          </Link>
         </div>
-      </div>
 
-      {quizzes.length === 0 ? (
-        <div className='bg-pink-50 py-12 rounded-xl text-center'>
-          <div className='inline-flex justify-center items-center bg-pink-100 mb-4 rounded-full w-12 h-12'>
-            <Search className='w-6 h-6 text-pink-500' />
+        {/* Enhanced Search & Filter */}
+        <div className='flex md:flex-row flex-col gap-4 mb-12'>
+          <div className='group relative flex-1'>
+            <div className='absolute -inset-1 bg-gradient-to-r from-pink-300 to-purple-300 opacity-0 group-hover:opacity-25 rounded-2xl transition duration-300 blur'></div>
+            <div className='relative bg-white/80 shadow-lg backdrop-blur-sm border border-pink-200/50 rounded-2xl overflow-hidden'>
+              <div className='left-0 absolute inset-y-0 flex items-center pl-4 pointer-events-none'>
+                <Search className='w-5 h-5 text-pink-400' />
+              </div>
+              <input
+                type='text'
+                className='bg-transparent py-4 pr-4 pl-12 focus:outline-none w-full text-gray-900 placeholder-gray-500'
+                placeholder='Search by title, creator, or enter quiz code...'
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
-          <h3 className='mb-2 font-semibold text-xl'>No quizzes found</h3>
-          <p className='mb-4 text-gray-500'>
-            Try searching with a different term or browse all quizzes.
-          </p>
-          <button
-            onClick={() => {
-              setSearchTerm("");
-              setSelectedSubject("");
-            }}
-            className='inline-flex justify-center items-center bg-pink-500 hover:bg-pink-600 px-4 py-2 rounded-full font-medium text-white transition-colors'
-          >
-            View All Quizzes
-          </button>
+
+          <div className='group relative w-full md:w-64'>
+            <div className='absolute -inset-1 bg-gradient-to-r from-purple-300 to-blue-300 opacity-0 group-hover:opacity-25 rounded-2xl transition duration-300 blur'></div>
+            <div className='relative bg-white/80 shadow-lg backdrop-blur-sm border border-purple-200/50 rounded-2xl overflow-hidden'>
+              <div className='left-0 absolute inset-y-0 flex items-center pl-4 pointer-events-none'>
+                <Filter className='w-5 h-5 text-purple-400' />
+              </div>
+              <select
+                className='bg-transparent py-4 pr-4 pl-12 focus:outline-none w-full text-gray-900 appearance-none'
+                value={selectedSubject}
+                onChange={(e) => setSelectedSubject(e.target.value)}
+              >
+                <option value=''>All Subjects</option>
+                {subjects.map((subject) => (
+                  <option key={subject} value={subject}>
+                    {subject}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
-      ) : (
-        <div className='gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3'>
-          {quizzes.map((quiz) => (
-            <div
-              key={quiz?._id}
-              className='bg-white shadow-sm hover:shadow-md border border-pink-100 rounded-xl overflow-hidden transition-all'
-            >
-              <div className='p-6'>
-                <div className='flex justify-between items-center mb-3'>
-                  <span className='inline-block bg-pink-100 px-3 py-1 rounded-full font-medium text-pink-600 text-xs'>
-                    {quiz?.subject}
-                  </span>
-                  <div className='flex items-center text-gray-500 text-sm'>
-                    <Clock className='mr-1 w-3 h-3' />
-                    {quiz.duration}
-                  </div>
-                </div>
-                <h3 className='mb-2 font-semibold text-lg line-clamp-1'>
-                  {quiz.title}
-                </h3>
-                <div className='flex items-center mb-2 text-gray-500 text-sm'>
-                  <Brain className='mr-1 w-3 h-3' /> {quiz.topic} •{" "}
-                  {quiz?.questions.length} questions
-                </div>
-                <div className='flex items-center mb-2 text-gray-500 text-sm'>
-                  <User className='mr-1 w-3 h-3' /> Created by{" "}
-                  {quiz.createdBy?.name}
-                </div>
-                <div className='flex items-center mb-4 text-gray-500 text-sm'>
-                  <Award className='mr-1 w-4 h-4 text-pink-500' />
-                  <span>Earn {quiz.xpReward} XP upon completion</span>
-                </div>
 
-                <div className='flex justify-between items-center mb-4'>
-                  <div className='flex items-center'>
-                    <span className='mr-2 text-gray-500 text-xs'>
-                      Quiz Code:
-                    </span>
-                    <span className='bg-pink-50 px-2 py-1 rounded-md font-medium text-pink-600 text-xs'>
-                      {quiz.code}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => copyCodeToClipboard(quiz.code)}
-                    className='p-1 text-gray-400 hover:text-pink-500 transition-colors'
-                    title='Copy quiz code'
-                  >
-                    {copiedCode === quiz.code ? (
-                      <span className='text-green-500 text-xs'>Copied!</span>
-                    ) : (
-                      <Copy className='w-4 h-4' />
-                    )}
-                  </button>
-                </div>
+        {/* Results */}
+        {quizzes.length === 0 ? (
+          <div className='group relative'>
+            <div className='absolute -inset-1 bg-gradient-to-r from-pink-300 to-purple-300 opacity-20 rounded-3xl blur'></div>
+            <div className='relative bg-white/70 shadow-xl backdrop-blur-sm py-16 border border-pink-200/50 rounded-3xl text-center'>
+              <div className='inline-flex justify-center items-center bg-gradient-to-r from-pink-100 to-purple-100 mb-6 rounded-2xl w-16 h-16'>
+                <Search className='w-8 h-8 text-pink-500' />
+              </div>
+              <h3 className='mb-3 font-bold text-gray-900 text-2xl'>
+                No quizzes found
+              </h3>
+              <p className='mx-auto mb-6 max-w-md text-gray-600 text-lg'>
+                Try searching with a different term or browse all available
+                quizzes.
+              </p>
+              <button
+                onClick={() => {
+                  setSearchTerm("");
+                  setSelectedSubject("");
+                }}
+                className='group inline-flex justify-center items-center bg-gradient-to-r from-pink-500 hover:from-pink-600 to-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl px-6 py-3 rounded-full font-semibold text-white hover:scale-105 transition-all duration-300 transform'
+              >
+                <Sparkles className='mr-2 w-4 h-4 group-hover:rotate-12 transition-transform' />
+                View All Quizzes
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className='gap-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3'>
+            {quizzes.map((quiz, index) => (
+              <div
+                key={quiz?._id}
+                className='group relative h-full animate-in duration-500 fade-in-0'
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className='absolute -inset-1 bg-gradient-to-r from-pink-300 to-purple-300 opacity-0 group-hover:opacity-25 rounded-2xl transition duration-500 blur'></div>
+                <div className='relative flex flex-col bg-white/80 shadow-lg hover:shadow-2xl backdrop-blur-sm border border-pink-100/50 rounded-2xl h-full overflow-hidden transition-all hover:-translate-y-2 duration-500'>
+                  <div className='flex flex-col p-6 h-full'>
+                    {/* Header */}
+                    <div className='flex justify-between items-start mb-4'>
+                      <div
+                        className={`inline-flex items-center bg-gradient-to-r ${getSubjectColor(
+                          quiz?.subject
+                        )} px-3 py-1 rounded-full font-medium text-white text-xs shadow-lg`}
+                      >
+                        <Sparkles className='mr-1 w-3 h-3' />
+                        {quiz?.subject}
+                      </div>
+                      <div className='flex items-center bg-gray-100/80 px-2 py-1 rounded-lg text-gray-500 text-sm'>
+                        <Clock className='mr-1 w-3 h-3' />
+                        {quiz.duration}
+                      </div>
+                    </div>
 
-                <div className='flex gap-2'>
-                  <Link
-                    href={`/quiz-details/${quiz.code}`}
-                    className='inline-flex flex-1 justify-center items-center bg-pink-500 hover:bg-pink-600 px-4 py-2 rounded-full font-medium text-white transition-colors'
-                  >
-                    See Quiz <ChevronRight className='ml-1 w-4 h-4' />
-                  </Link>
-                  <button
-                    onClick={() => {
-                      const shareUrl = `${window.location.origin}/quiz-details/${quiz.code}`;
-                      if (navigator.share) {
-                        navigator.share({
-                          title: quiz.title,
-                          text: `Try this quiz: ${quiz.title}`,
-                          url: shareUrl,
-                        });
-                      } else {
-                        navigator.clipboard.writeText(shareUrl);
-                        setCopiedCode(`share-${quiz.code}`);
-                        setTimeout(() => setCopiedCode(""), 2000);
-                      }
-                    }}
-                    className='inline-flex justify-center items-center bg-white hover:bg-pink-50 px-3 py-2 border border-pink-200 rounded-full font-medium text-pink-500 transition-colors'
-                    title='Share quiz'
-                  >
-                    {copiedCode === `share-${quiz.code}` ? (
-                      <span className='text-green-500 text-xs'>Copied!</span>
-                    ) : (
-                      <Share2 className='w-4 h-4' />
-                    )}
-                  </button>
+                    {/* Title */}
+                    <h3 className='mb-4 min-h-[3.5rem] font-bold text-gray-900 group-hover:text-pink-600 text-xl line-clamp-2 transition-colors'>
+                      {quiz.title}
+                    </h3>
+
+                    {/* Meta Info */}
+                    <div className='flex-grow space-y-2 mb-4'>
+                      <div className='flex items-center text-gray-600 text-sm'>
+                        <Brain className='mr-2 w-4 h-4 text-pink-500' />
+                        <span className='font-medium'>{quiz.topic}</span>
+                        <span className='mx-2'>•</span>
+                        <span>{quiz?.questions.length} questions</span>
+                      </div>
+                      <div className='flex items-center text-gray-600 text-sm'>
+                        <User className='mr-2 w-4 h-4 text-purple-500' />
+                        Created by{" "}
+                        <span className='ml-1 font-medium'>
+                          {quiz.createdBy?.name}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* XP Reward */}
+                    <div className='flex items-center bg-gradient-to-r from-amber-50 to-yellow-50 mb-4 p-3 border border-amber-200/50 rounded-xl'>
+                      <Award className='mr-2 w-5 h-5 text-amber-500' />
+                      <span className='font-semibold text-amber-700 text-sm'>
+                        Earn {quiz.xpReward} XP upon completion
+                      </span>
+                    </div>
+
+                    {/* Quiz Code */}
+                    <div className='flex justify-between items-center bg-pink-50/80 mb-4 p-3 border border-pink-200/50 rounded-xl'>
+                      <div className='flex items-center'>
+                        <Hash className='mr-2 w-4 h-4 text-pink-500' />
+                        <span className='mr-2 text-gray-600 text-sm'>
+                          Code:
+                        </span>
+                        <span className='bg-white/80 px-3 py-1 border border-pink-200 rounded-lg font-mono font-bold text-pink-600 text-sm'>
+                          {quiz.code}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => copyCodeToClipboard(quiz.code)}
+                        className='hover:bg-pink-100 p-2 rounded-lg text-pink-400 hover:text-pink-600 transition-all duration-200'
+                        title='Copy quiz code'
+                      >
+                        {copiedCode === quiz.code ? (
+                          <span className='font-semibold text-green-500 text-xs'>
+                            Copied!
+                          </span>
+                        ) : (
+                          <Copy className='w-4 h-4' />
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Actions */}
+                    <div className='flex gap-3 mt-auto'>
+                      <Link
+                        href={`/quiz-details/${quiz.code}`}
+                        className='group inline-flex relative flex-1 justify-center items-center bg-gradient-to-r from-pink-500 hover:from-pink-600 to-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl px-4 py-3 rounded-xl overflow-hidden font-semibold text-white transition-all duration-300'
+                      >
+                        <div className='absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transition-transform translate-x-[-100%] group-hover:translate-x-[100%] duration-700'></div>
+                        <Zap className='mr-2 w-4 h-4' />
+                        Take Quiz
+                        <ChevronRight className='ml-1 w-4 h-4 transition-transform group-hover:translate-x-1' />
+                      </Link>
+                      <button
+                        onClick={() => {
+                          const shareUrl = `${window.location.origin}/quiz-details/${quiz.code}`;
+                          if (navigator.share) {
+                            navigator.share({
+                              title: quiz.title,
+                              text: `Try this quiz: ${quiz.title}`,
+                              url: shareUrl,
+                            });
+                          } else {
+                            navigator.clipboard.writeText(shareUrl);
+                            setCopiedCode(`share-${quiz.code}`);
+                            setTimeout(() => setCopiedCode(""), 2000);
+                          }
+                        }}
+                        className='inline-flex justify-center items-center bg-white/80 hover:bg-white hover:shadow-lg backdrop-blur-sm px-3 py-3 border border-pink-200 hover:border-pink-300 rounded-xl font-medium text-pink-600 transition-all duration-300'
+                        title='Share quiz'
+                      >
+                        {copiedCode === `share-${quiz.code}` ? (
+                          <span className='font-semibold text-green-500 text-xs'>
+                            Copied!
+                          </span>
+                        ) : (
+                          <Share2 className='w-4 h-4' />
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Award, BookOpen, Trophy, User } from "lucide-react";
+import { Award, BookOpen, Trophy, User, TrendingUp, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import QuizHistory from "@/app/components/quiz-history";
@@ -115,7 +115,7 @@ export default function Dashboard() {
 
   const getInitials = (name: string) =>
     name
-      .split(" ")
+      ?.split(" ")
       .map((part) => part[0])
       .join("")
       .toUpperCase()
@@ -123,138 +123,221 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className='mx-auto px-4 md:px-6 py-8 md:py-12 max-w-6xl container'>
-        <div className='flex justify-center items-center h-64'>
-          <div className='border-pink-500 border-t-2 border-b-2 rounded-full w-12 h-12 animate-spin'></div>
+      <div className='flex justify-center items-center bg-gradient-to-br from-slate-50 via-white to-pink-50/30 min-h-screen'>
+        <div className='relative'>
+          <div className='absolute -inset-4 bg-gradient-to-r from-pink-300 to-purple-300 opacity-20 rounded-full blur'></div>
+          <div className='relative bg-white/80 shadow-xl backdrop-blur-sm p-8 border border-pink-200/50 rounded-2xl'>
+            <div className='flex items-center space-x-3'>
+              <div className='relative'>
+                <div className='border-pink-500 border-t-4 border-r-4 rounded-full w-8 h-8 animate-spin'></div>
+                <div className='absolute inset-0 border-2 border-pink-200 rounded-full'></div>
+              </div>
+              <span className='font-medium text-gray-700'>
+                Loading your dashboard...
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className='mx-auto px-4 md:px-6 py-8 md:py-12 max-w-6xl container'>
-      <div className='gap-8 grid md:grid-cols-3'>
-        <div className='md:col-span-1'>
-          <div className='bg-white shadow-sm p-6 border border-pink-100 rounded-xl'>
-            {/* Profile Image and Name */}
-            <div className='flex lg:flex-row flex-col items-center gap-4 pb-4'>
-              <div className='relative border-4 border-pink-100 rounded-full w-20 h-20 overflow-hidden'>
-                {user?.profilePicture ? (
-                  <Image
-                    src={user?.profilePicture || "/images/placeholder.png"}
-                    alt={user?.name}
-                    fill
-                    className='object-cover'
-                  />
-                ) : (
-                  <div className='flex justify-center items-center bg-pink-50 w-full h-full font-medium text-pink-500 text-xl'>
-                    {getInitials(user?.name || "")}
+    <div className='bg-gradient-to-br from-slate-50 via-white to-pink-50/30 min-h-screen'>
+      {/* Background Pattern */}
+      <div className='absolute inset-0 opacity-5 pointer-events-none'>
+        <div
+          className='top-0 left-0 absolute w-full h-full'
+          style={{
+            backgroundImage: `radial-gradient(circle at 25% 25%, #ec4899 1px, transparent 1px)`,
+            backgroundSize: "40px 40px",
+          }}
+        ></div>
+      </div>
+
+      <div className='relative mx-auto px-4 md:px-6 py-8 md:py-12 max-w-6xl container'>
+        {/* Welcome Header */}
+        <div className='mb-12'>
+          <div className='inline-flex items-center bg-gradient-to-r from-pink-100 to-purple-100 mb-4 px-4 py-2 border border-pink-200/50 rounded-full font-medium text-pink-600 text-sm'>
+            <Star className='mr-2 w-4 h-4' />
+            Welcome back, {user?.name?.split(" ")[0]}!
+          </div>
+          <h1 className='bg-clip-text bg-gradient-to-r from-gray-900 to-gray-700 mb-2 font-bold text-transparent text-4xl md:text-5xl tracking-tight'>
+            Your Learning Dashboard
+          </h1>
+          <p className='text-gray-600 text-lg'>
+            Track your progress, compete with others, and continue your learning
+            journey.
+          </p>
+        </div>
+
+        <div className='gap-8 grid lg:grid-cols-3'>
+          <div className='lg:col-span-1'>
+            <div className='relative'>
+              <div className='absolute -inset-1 bg-gradient-to-r from-pink-300 to-purple-300 opacity-0 group-hover:opacity-25 rounded-2xl transition duration-300 blur'></div>
+              <div className='relative bg-white/80 shadow-lg backdrop-blur-sm p-8 border border-pink-100/50 rounded-2xl'>
+                {/* Profile Image and Name */}
+                <div className='flex lg:flex-row flex-col items-center gap-4 pb-6'>
+                  <div className='relative'>
+                    <div className='absolute -inset-2 bg-gradient-to-r from-pink-400 to-purple-400 opacity-20 rounded-full blur'></div>
+                    <div className='relative shadow-lg border-4 border-white rounded-full w-20 h-20 overflow-hidden'>
+                      {user?.profilePicture ? (
+                        <Image
+                          src={
+                            user?.profilePicture || "/images/placeholder.png"
+                          }
+                          alt={user?.name}
+                          fill
+                          className='object-cover'
+                        />
+                      ) : (
+                        <div className='flex justify-center items-center bg-gradient-to-br from-pink-100 to-purple-100 w-full h-full font-bold text-pink-600 text-xl'>
+                          {getInitials(user?.name || "")}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
-              <div>
-                <h2 className='font-bold text-xl'>{user?.name}</h2>
-                <p className='text-gray-500 text-sm'>{user?.rank}</p>
-              </div>
-            </div>
-
-            <div className='space-y-4'>
-              <div className='space-y-2'>
-                <div className='flex justify-between items-center'>
-                  <div className='flex items-center'>
-                    <Award className='mr-2 w-5 h-5 text-pink-500' />
-                    <span className='font-medium'>Level {user?.level}</span>
+                  <div className='lg:text-left text-center'>
+                    <h2 className='font-bold text-gray-900 text-2xl'>
+                      {user?.name}
+                    </h2>
+                    <div className='inline-flex items-center bg-gradient-to-r from-amber-100 to-yellow-100 mt-1 px-3 py-1 border border-amber-200/50 rounded-full'>
+                      <Trophy className='mr-1 w-4 h-4 text-amber-600' />
+                      <span className='font-semibold text-amber-700 text-sm'>
+                        {user?.rank}
+                      </span>
+                    </div>
                   </div>
-                  <span className='text-gray-500 text-sm'>
-                    {user?.xp}/{calculateNextLevelXP(user?.xp ?? 0)} XP
-                  </span>
                 </div>
-                <div className='bg-pink-100 rounded-full w-full h-2 overflow-hidden'>
-                  <div
-                    className='bg-pink-500 rounded-full h-full'
-                    style={{
-                      width: `${
-                        user?.xp && calculateNextLevelXP(user?.xp) !== 0
-                          ? (user.xp /
-                              (calculateNextLevelXP(user.xp) + user.xp)) *
-                            100
-                          : 0
-                      }%`,
-                    }}
-                  ></div>
-                </div>
-              </div>
 
-              <div className='gap-4 grid grid-cols-2 pt-4'>
-                <div className='flex flex-col justify-center items-center bg-pink-50 p-4 rounded-lg'>
-                  <BookOpen className='mb-2 w-6 h-6 text-pink-500' />
-                  <span className='font-bold text-xl'>
-                    {user?.quizResults.length}
-                  </span>
-                  <span className='text-gray-500 text-xs'>
-                    Quizzes Completed
-                  </span>
-                </div>
-                <div className='flex flex-col justify-center items-center bg-pink-50 p-4 rounded-lg'>
-                  <Trophy className='mb-2 w-6 h-6 text-pink-500' />
-                  <span className='font-bold text-xl'>0</span>
-                  <span className='text-gray-500 text-xs'>Achievements</span>
-                </div>
-              </div>
+                <div className='space-y-6'>
+                  <div className='space-y-3'>
+                    <div className='flex justify-between items-center'>
+                      <div className='flex items-center'>
+                        <Award className='mr-2 w-5 h-5 text-pink-500' />
+                        <span className='font-bold text-gray-900 text-lg'>
+                          Level {user?.level}
+                        </span>
+                      </div>
+                      <span className='font-medium text-gray-600 text-sm'>
+                        {user?.xp}/{calculateNextLevelXP(user?.xp ?? 0)} XP
+                      </span>
+                    </div>
+                    <div className='relative bg-gray-200 rounded-full w-full h-3 overflow-hidden'>
+                      <div
+                        className='absolute inset-0 bg-gradient-to-r from-pink-400 to-purple-500 rounded-full transition-all duration-500'
+                        style={{
+                          width: `${
+                            user?.xp && calculateNextLevelXP(user?.xp) !== 0
+                              ? (user.xp /
+                                  (calculateNextLevelXP(user.xp) + user.xp)) *
+                                100
+                              : 0
+                          }%`,
+                        }}
+                      ></div>
+                      <div className='absolute inset-0 bg-gradient-to-r from-white/30 to-transparent rounded-full'></div>
+                    </div>
+                  </div>
 
-              <div className='pt-4'>
-                <Link
-                  href={`/dashboard/settings/${user?.name}`}
-                  className='inline-flex items-center font-medium text-pink-500 hover:text-pink-600 text-sm'
-                >
-                  <User className='mr-1 w-4 h-4' />
-                  Edit Profile
-                </Link>
+                  <div className='gap-4 grid grid-cols-2 pt-4'>
+                    <div className='group relative'>
+                      <div className='absolute -inset-1 bg-gradient-to-r from-pink-300 to-pink-400 opacity-0 group-hover:opacity-20 rounded-xl transition duration-300 blur'></div>
+                      <div className='relative flex flex-col justify-center items-center bg-gradient-to-br from-pink-50 to-pink-100 p-2 border border-pink-200/50 rounded-xl'>
+                        <BookOpen className='mb-2 w-6 h-6 text-pink-500' />
+                        <span className='font-bold text-gray-900 text-xl'>
+                          {user?.quizResults.length}
+                        </span>
+                        <span className='text-gray-600 text-xs text-center'>
+                          Quizzes Completed
+                        </span>
+                      </div>
+                    </div>
+                    <div className='group relative'>
+                      <div className='absolute -inset-1 bg-gradient-to-r from-purple-300 to-purple-400 opacity-0 group-hover:opacity-20 rounded-xl transition duration-300 blur'></div>
+                      <div className='relative flex flex-col justify-center items-center bg-gradient-to-br from-purple-50 to-purple-100 p-2 border border-purple-200/50 rounded-xl'>
+                        <Trophy className='mb-2 w-6 h-6 text-purple-500' />
+                        <span className='font-bold text-gray-900 text-xl'>
+                          {Math.round(
+                            ((user?.quizResults.filter((r) => r.passed)
+                              .length || 0) /
+                              (user?.quizResults.length || 1)) *
+                              100
+                          )}
+                          %
+                        </span>
+                        <span className='text-gray-600 text-xs text-center'>
+                          Success Rate
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className='pt-6'>
+                    <Link
+                      href={`/dashboard/settings/${user?.name}`}
+                      className='group inline-flex relative justify-center items-center bg-gradient-to-r from-pink-500 hover:from-pink-600 to-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl px-6 py-3 rounded-xl w-full overflow-hidden font-semibold text-white transition-all duration-300'
+                    >
+                      <div className='absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transition-transform translate-x-[-100%] group-hover:translate-x-[100%] duration-700'></div>
+                      <User className='mr-2 w-4 h-4' />
+                      Edit Profile
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className='md:col-span-2'>
-          <div className='bg-white shadow-sm border border-pink-100 rounded-xl overflow-hidden'>
-            <div className='flex border-pink-100 border-b'>
-              {/* Quiz History Button */}
-              <button
-                onClick={() => setActiveTab("quizHistory")}
-                className={`flex-1 px-4 py-3  border-b-2 font-medium text-center ${
-                  activeTab === "quizHistory"
-                    ? "text-pink-500 border-pink-500"
-                    : "text-gray-500 border-transparent"
-                } hover:text-pink-500 transition-colors `}
-              >
-                Quiz History
-              </button>
+          <div className='lg:col-span-2'>
+            <div className='relative'>
+              <div className='absolute -inset-1 bg-gradient-to-r from-pink-300 to-purple-300 opacity-0 group-hover:opacity-25 rounded-2xl transition duration-300 blur'></div>
+              <div className='relative bg-white/80 shadow-lg backdrop-blur-sm border border-pink-100/50 rounded-2xl overflow-hidden'>
+                <div className='flex bg-gradient-to-r from-pink-50/50 to-purple-50/50 border-pink-100/50 border-b'>
+                  {/* Quiz History Button */}
+                  <button
+                    onClick={() => setActiveTab("quizHistory")}
+                    className={`group flex-1 px-6 py-4 border-b-2 font-semibold text-center transition-all duration-300 ${
+                      activeTab === "quizHistory"
+                        ? "text-pink-600 border-pink-500 bg-white/50"
+                        : "text-gray-500 border-transparent hover:text-pink-500 hover:bg-white/30"
+                    }`}
+                  >
+                    <div className='flex justify-center items-center'>
+                      <BookOpen className='mr-2 w-4 h-4' />
+                      Quiz History
+                    </div>
+                  </button>
 
-              {/* Leaderboard Button */}
-              <button
-                onClick={() => setActiveTab("leaderboard")}
-                className={`flex-1 px-4 py-3  border-b-2 font-medium text-center ${
-                  activeTab === "leaderboard"
-                    ? "text-pink-500 border-pink-500"
-                    : "text-gray-500 border-transparent"
-                } hover:text-pink-500 transition-colors `}
-              >
-                Leaderboard
-              </button>
+                  {/* Leaderboard Button */}
+                  <button
+                    onClick={() => setActiveTab("leaderboard")}
+                    className={`group flex-1 px-6 py-4 border-b-2 font-semibold text-center transition-all duration-300 ${
+                      activeTab === "leaderboard"
+                        ? "text-pink-600 border-pink-500 bg-white/50"
+                        : "text-gray-500 border-transparent hover:text-pink-500 hover:bg-white/30"
+                    }`}
+                  >
+                    <div className='flex justify-center items-center'>
+                      <TrendingUp className='mr-2 w-4 h-4' />
+                      Leaderboard
+                    </div>
+                  </button>
+                </div>
+
+                {/* Conditional rendering based on active tab */}
+                {activeTab === "quizHistory" && (
+                  <div className='p-6 animate-in duration-500 fade-in-0'>
+                    <QuizHistory />
+                  </div>
+                )}
+
+                {activeTab === "leaderboard" && (
+                  <div className='p-6 animate-in duration-500 fade-in-0'>
+                    <Leaderboard />
+                  </div>
+                )}
+              </div>
             </div>
-
-            {/* Conditional rendering based on active tab */}
-            {activeTab === "quizHistory" && (
-              <div className='p-4'>
-                <QuizHistory />
-              </div>
-            )}
-
-            {activeTab === "leaderboard" && (
-              <div className='p-4'>
-                <Leaderboard />
-              </div>
-            )}
           </div>
         </div>
       </div>

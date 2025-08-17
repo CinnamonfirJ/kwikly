@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { useState, useRef } from "react";
-import { Upload, FileText, AlertCircle } from "lucide-react";
+import { Upload, FileText, Sparkles, Info, Download } from "lucide-react";
 import { useToastContext } from "@/providers/toast-provider";
 import ConfirmationModal from "./confirmation-modal";
 import * as mammoth from "mammoth"; // Use browser version
@@ -269,83 +269,190 @@ export default function FileImportButton({ onImport }: FileImportButtonProps) {
   };
 
   return (
-    <div className='mt-4'>
-      <input
-        type='file'
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept='.csv,.json,.txt'
-        className='hidden'
-      />
-      <button
-        onClick={handleButtonClick}
-        disabled={isLoading}
-        className='inline-flex justify-center items-center bg-white hover:bg-pink-50 px-4 py-2 border border-pink-200 rounded-full font-medium text-pink-500 transition-colors'
-      >
-        {isLoading ? (
-          <>
-            <div className='flex justify-center items-center'>
-              <div className='border-amber-50 border-t-2 border-b-2 rounded-full w-5 h-5 animate-spin'></div>
-            </div>
-            Importing...
-          </>
-        ) : (
-          <>
-            <Upload className='mr-2 w-4 h-4' />
-            Import Quiz
-          </>
-        )}
-      </button>
-
-      <div className='flex items-start gap-1 mt-2 text-gray-500 text-xs'>
-        <FileText className='flex-shrink-0 mt-0.5 w-3 h-3' />
-        <span>Supported formats: CSV, JSON, TXT</span>
-      </div>
-
-      <div className='bg-blue-50 mt-4 p-4 sm:p-3 border border-blue-200 rounded-lg text-blue-800 text-sm'>
-        <div className='flex sm:flex-row flex-col sm:items-start sm:gap-3'>
-          <AlertCircle
-            onClick={() => setFormatModalOpen(true)}
-            className='flex-shrink-0 bg-blue-100 sm:mt-0.5 mb-2 sm:mb-0 p-1 rounded-full w-6 h-6 text-blue-500 cursor-pointer pulse-soft'
-          />
-
-          <div className='text-sm break-words whitespace-normal'>
-            <p className='mb-2 font-medium'>Import Format Tips:</p>
-            <ul className='space-y-2 ml-4 text-sm list-disc list-inside'>
-              <li>
-                <strong>CSV:</strong> First row should be headers (
-                <span className='break-all'>
-                  title,subject,topic,instruction,questionText,options,correctAnswer,points
-                </span>
-                )
-              </li>
-              <li>
-                <strong>JSON:</strong> Must include <code>title</code>,{" "}
-                <code>subject</code>, <code>topic</code>,
-                <code>instruction</code> fields and optional{" "}
-                <code>questions</code> array
-              </li>
-              <li>
-                <strong>Text:</strong> First 4 lines should be title, subject,
-                topic, and instruction. Questions format: <br />
-                Q: question, A: option1, B: option2, C: option3, D: option4,
-                Correct: A, Points: 1
-              </li>
-            </ul>
+    <div className='group relative'>
+      <div className='absolute -inset-1 bg-gradient-to-r from-blue-300 to-indigo-400 opacity-0 group-hover:opacity-20 rounded-3xl transition duration-300 blur'></div>
+      <div className='relative bg-white/80 shadow-lg backdrop-blur-sm p-6 border border-blue-100/50 rounded-2xl'>
+        {/* Header */}
+        <div className='flex items-center gap-3 mb-4'>
+          <div className='bg-gradient-to-r from-blue-100 to-indigo-100 p-3 rounded-xl'>
+            <Upload className='w-5 h-5 text-blue-600' />
           </div>
-
-          <ConfirmationModal
-            isOpen={formatModalOpen}
-            onClose={() => setFormatModalOpen(false)}
-            onConfirm={handleOpenFileImportExample}
-            title='Import Example'
-            description="Guess what? You can magically import your quizzes with just a CSV, JSON, or text file! ✨ No manual typing needed—just format it right, and boom, you're all set! Want to see some examples? Click below to check them out!"
-            confirmText='See Examples'
-            cancelText='Cancel'
-            type='info'
-            isLoading={isLoading}
-          />
+          <div>
+            <h3 className='font-bold text-gray-900 text-lg'>Import Quiz</h3>
+            <p className='text-gray-600 text-sm'>
+              Upload your quiz from a file
+            </p>
+          </div>
         </div>
+
+        {/* File Input */}
+        <input
+          type='file'
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept='.csv,.json,.txt,.docx'
+          className='hidden'
+        />
+
+        {/* Import Button */}
+        <button
+          onClick={handleButtonClick}
+          disabled={isLoading}
+          className={`group inline-flex items-center bg-gradient-to-r from-blue-500 hover:from-blue-600 to-indigo-600 hover:to-indigo-700 shadow-lg hover:shadow-xl px-6 py-3 rounded-xl overflow-hidden font-semibold text-white transition-all duration-300 transform ${
+            isLoading ? "opacity-70 cursor-not-allowed" : "hover:scale-105"
+          }`}
+        >
+          {isLoading ? (
+            <>
+              <svg
+                className='mr-2 -ml-1 w-4 h-4 text-white animate-spin'
+                xmlns='http://www.w3.org/2000/svg'
+                fill='none'
+                viewBox='0 0 24 24'
+              >
+                <circle
+                  className='opacity-25'
+                  cx='12'
+                  cy='12'
+                  r='10'
+                  stroke='currentColor'
+                  strokeWidth='4'
+                ></circle>
+                <path
+                  className='opacity-75'
+                  fill='currentColor'
+                  d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                ></path>
+              </svg>
+              Importing Quiz...
+            </>
+          ) : (
+            <>
+              <div className='absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transition-transform translate-x-[-100%] group-hover:translate-x-[100%] duration-700'></div>
+              <Upload className='mr-2 w-4 h-4' />
+              Choose File to Import
+            </>
+          )}
+        </button>
+
+        {/* Supported Formats */}
+        <div className='flex items-center gap-2 mt-4'>
+          <FileText className='w-4 h-4 text-gray-500' />
+          <span className='text-gray-600 text-sm'>
+            Supported formats:{" "}
+            <span className='font-medium'>CSV, JSON, TXT, DOCX</span>
+          </span>
+        </div>
+
+        {/* Format Guide */}
+        <div className='group relative mt-6'>
+          <div className='absolute -inset-1 bg-gradient-to-r from-emerald-200 to-blue-200 opacity-20 rounded-2xl transition duration-300 blur'></div>
+          <div className='relative bg-gradient-to-r from-emerald-50/80 to-blue-50/80 backdrop-blur-sm p-5 border border-emerald-100/50 rounded-2xl'>
+            <div className='flex items-start gap-3'>
+              <button
+                onClick={() => setFormatModalOpen(true)}
+                className='group flex-shrink-0 bg-gradient-to-r from-emerald-100 hover:from-emerald-200 to-blue-100 hover:to-blue-200 mt-1 p-2 rounded-full hover:scale-110 transition-all duration-200 transform'
+              >
+                <Info className='w-4 h-4 text-emerald-600' />
+              </button>
+
+              <div>
+                <div className='flex items-center gap-2 mb-3'>
+                  <Sparkles className='w-4 h-4 text-emerald-500' />
+                  <h4 className='font-semibold text-emerald-800'>
+                    Import Format Guide
+                  </h4>
+                </div>
+
+                <div className='space-y-3 text-sm'>
+                  {/* CSV Format */}
+                  <div className='bg-white/60 backdrop-blur-sm p-3 border border-emerald-200/50 rounded-xl'>
+                    <div className='flex items-center gap-2 mb-2'>
+                      <div className='bg-green-100 px-2 py-1 rounded-md font-mono text-green-700 text-xs'>
+                        CSV
+                      </div>
+                      <span className='font-medium text-gray-700'>
+                        Comma Separated Values
+                      </span>
+                    </div>
+                    <p className='text-gray-600 text-xs leading-relaxed'>
+                      Headers:{" "}
+                      <code className='bg-gray-100 px-1 rounded text-xs'>
+                        title,subject,topic,instruction,questionText,options,correctAnswer,points
+                      </code>
+                    </p>
+                  </div>
+
+                  {/* JSON Format */}
+                  <div className='bg-white/60 backdrop-blur-sm p-3 border border-blue-200/50 rounded-xl'>
+                    <div className='flex items-center gap-2 mb-2'>
+                      <div className='bg-blue-100 px-2 py-1 rounded-md font-mono text-blue-700 text-xs'>
+                        JSON
+                      </div>
+                      <span className='font-medium text-gray-700'>
+                        JavaScript Object Notation
+                      </span>
+                    </div>
+                    <p className='text-gray-600 text-xs leading-relaxed'>
+                      Required fields:{" "}
+                      <code className='bg-gray-100 px-1 rounded text-xs'>
+                        title, subject, topic, instruction
+                      </code>{" "}
+                      + optional{" "}
+                      <code className='bg-gray-100 px-1 rounded text-xs'>
+                        questions
+                      </code>{" "}
+                      array
+                    </p>
+                  </div>
+
+                  {/* Text Format */}
+                  <div className='bg-white/60 backdrop-blur-sm p-3 border border-purple-200/50 rounded-xl'>
+                    <div className='flex items-center gap-2 mb-2'>
+                      <div className='bg-purple-100 px-2 py-1 rounded-md font-mono text-purple-700 text-xs'>
+                        TXT
+                      </div>
+                      <span className='font-medium text-gray-700'>
+                        Plain Text Format
+                      </span>
+                    </div>
+                    <p className='text-gray-600 text-xs leading-relaxed'>
+                      First 4 lines: title, subject, topic, instruction.
+                      Questions format: <br />
+                      <code className='bg-gray-100 px-1 rounded text-xs'>
+                        Q: question, A: option1, B: option2, Correct: A, Points:
+                        1
+                      </code>
+                    </p>
+                  </div>
+                </div>
+
+                {/* View Examples Button */}
+                <button
+                  onClick={() => setFormatModalOpen(true)}
+                  className='group inline-flex items-center bg-gradient-to-r from-emerald-500 hover:from-emerald-600 to-blue-600 hover:to-blue-700 shadow-md hover:shadow-lg mt-4 px-4 py-2 rounded-lg overflow-hidden font-medium text-white text-sm hover:scale-105 transition-all duration-300 transform'
+                >
+                  <div className='absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transition-transform translate-x-[-100%] group-hover:translate-x-[100%] duration-700'></div>
+                  <Download className='mr-2 w-3 h-3' />
+                  View Format Examples
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={formatModalOpen}
+          onClose={() => setFormatModalOpen(false)}
+          onConfirm={handleOpenFileImportExample}
+          title='Import Format Examples'
+          description="Ready to import your quiz like a pro? ✨ We've got you covered with detailed examples for CSV, JSON, and text formats! No more guessing—just follow our templates and watch your quiz come to life instantly. Click below to see the magic happen!"
+          confirmText='View Examples'
+          cancelText='Cancel'
+          type='info'
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );

@@ -4,7 +4,18 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { use } from "react";
-import { ChevronLeft, Clock, CheckCircle, XCircle } from "lucide-react";
+import {
+  ChevronLeft,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Sparkles,
+  User,
+  Target,
+  Award,
+  ChevronRight,
+  BookOpen,
+} from "lucide-react";
 import Image from "next/image";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRank } from "@/context/RankContext";
@@ -565,27 +576,60 @@ export default function QuizSession({
 
   const getInitials = (name: string) =>
     name
-      .split(" ")
+      ?.split(" ")
       .map((part) => part[0])
       .join("")
       .toUpperCase()
       .substring(0, 2);
 
+  const getSubjectColor = (subject?: string) => {
+    const colors = {
+      Mathematics: "from-blue-500 to-blue-600",
+      Science: "from-green-500 to-green-600",
+      English: "from-purple-500 to-purple-600",
+      History: "from-amber-500 to-amber-600",
+      Geography: "from-emerald-500 to-emerald-600",
+      Technology: "from-indigo-500 to-indigo-600",
+      "Computer Science": "from-cyan-500 to-cyan-600",
+      "Network Technology": "from-violet-500 to-violet-600",
+      "Department of Computer Engineering": "from-rose-500 to-rose-600",
+      "Human-Computer Interaction": "from-teal-500 to-teal-600",
+      "Computer Engineering": "from-orange-500 to-orange-600",
+    };
+    return (
+      colors[subject as keyof typeof colors] || "from-pink-500 to-pink-600"
+    );
+  };
+
   // If quiz not found
   if (!quiz) {
     return (
-      <div className='flex flex-col justify-center items-center min-h-[70vh]'>
-        <div className='text-center'>
-          <h2 className='mb-4 font-bold text-2xl'>Quiz Not Found</h2>
-          <p className='mb-6 text-gray-500'>
-            The quiz with code &#34;{code}&#34; could not be found.
-          </p>
-          <Link
-            href='/quizzes'
-            className='inline-flex justify-center items-center bg-pink-500 hover:bg-pink-600 px-6 py-2 rounded-full font-medium text-white transition-colors'
-          >
-            Browse Quizzes
-          </Link>
+      <div className='bg-gradient-to-br from-slate-50 via-white to-pink-50/30 min-h-screen'>
+        <div className='absolute inset-0 opacity-5 pointer-events-none'>
+          <div
+            className='top-0 left-0 absolute w-full h-full'
+            style={{
+              backgroundImage: `radial-gradient(circle at 25% 25%, #ec4899 1px, transparent 1px)`,
+              backgroundSize: "40px 40px",
+            }}
+          ></div>
+        </div>
+        <div className='relative flex flex-col justify-center items-center min-h-screen'>
+          <div className='bg-white/80 shadow-lg backdrop-blur-sm p-8 border border-pink-100/50 rounded-2xl text-center'>
+            <h2 className='mb-4 font-bold text-gray-900 text-2xl'>
+              Quiz Not Found
+            </h2>
+            <p className='mb-6 text-gray-600'>
+              The quiz with code &#34;{code}&#34; could not be found.
+            </p>
+            <Link
+              href='/quizzes'
+              className='group inline-flex justify-center items-center bg-gradient-to-r from-pink-500 hover:from-pink-600 to-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl px-6 py-3 rounded-xl overflow-hidden font-medium text-white hover:scale-105 transition-all duration-300 transform'
+            >
+              <ChevronLeft className='mr-2 w-4 h-4' />
+              Browse Quizzes
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -594,18 +638,32 @@ export default function QuizSession({
   // If quiz is private and user is not the creator
   if (!quiz.isPublic && !isCreator) {
     return (
-      <div className='flex flex-col justify-center items-center min-h-[70vh]'>
-        <div className='text-center'>
-          <h2 className='mb-4 font-bold text-2xl'>Private Quiz</h2>
-          <p className='mb-6 text-gray-500'>
-            This quiz is private and can only be accessed by its creator.
-          </p>
-          <Link
-            href='/quizzes'
-            className='inline-flex justify-center items-center bg-pink-500 hover:bg-pink-600 px-6 py-2 rounded-full font-medium text-white transition-colors'
-          >
-            Browse Quizzes
-          </Link>
+      <div className='bg-gradient-to-br from-slate-50 via-white to-pink-50/30 min-h-screen'>
+        <div className='absolute inset-0 opacity-5 pointer-events-none'>
+          <div
+            className='top-0 left-0 absolute w-full h-full'
+            style={{
+              backgroundImage: `radial-gradient(circle at 25% 25%, #ec4899 1px, transparent 1px)`,
+              backgroundSize: "40px 40px",
+            }}
+          ></div>
+        </div>
+        <div className='relative flex flex-col justify-center items-center min-h-screen'>
+          <div className='bg-white/80 shadow-lg backdrop-blur-sm p-8 border border-pink-100/50 rounded-2xl text-center'>
+            <h2 className='mb-4 font-bold text-gray-900 text-2xl'>
+              Private Quiz
+            </h2>
+            <p className='mb-6 text-gray-600'>
+              This quiz is private and can only be accessed by its creator.
+            </p>
+            <Link
+              href='/quizzes'
+              className='group inline-flex justify-center items-center bg-gradient-to-r from-pink-500 hover:from-pink-600 to-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl px-6 py-3 rounded-xl overflow-hidden font-medium text-white hover:scale-105 transition-all duration-300 transform'
+            >
+              <ChevronLeft className='mr-2 w-4 h-4' />
+              Browse Quizzes
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -615,223 +673,384 @@ export default function QuizSession({
   const question = questions[currentQuestion];
 
   return (
-    <div className='mx-auto px-4 md:px-6 py-8 md:py-12 max-w-7xl container'>
-      {!quizCompleted ? (
-        // Quiz in progress
-        <div className='gap-8 grid md:grid-cols-3'>
-          {/* Quiz */}
-          <div className='md:col-span-2 bg-white shadow-md border border-pink-100 rounded-xl overflow-hidden'>
-            {/* Header */}
-            <div className='flex justify-between items-center p-6 border-pink-100 border-b'>
-              <div className='flex items-center gap-2'>
-                <button
-                  onClick={() => router.back()}
-                  className='hover:bg-pink-50 p-2 rounded-full transition-colors'
-                >
-                  <ChevronLeft className='w-5 h-5 text-gray-500' />
-                </button>
-                <h1 className='font-bold text-xl'>{quiz.title}</h1>
-              </div>
-              <div className='flex items-center gap-2 bg-pink-50 px-3 py-1 rounded-full'>
-                <Clock className='w-4 h-4 text-pink-500' />
-                <span className='font-medium text-pink-500'>
-                  {formatTime(timeLeft)}
-                </span>
-              </div>
-            </div>
+    <div className='bg-gradient-to-br from-slate-50 via-white to-pink-50/30 min-h-screen'>
+      {/* Background Pattern */}
+      <div className='absolute inset-0 opacity-5 pointer-events-none'>
+        <div
+          className='top-0 left-0 absolute w-full h-full'
+          style={{
+            backgroundImage: `radial-gradient(circle at 25% 25%, #ec4899 1px, transparent 1px)`,
+            backgroundSize: "40px 40px",
+          }}
+        ></div>
+      </div>
 
-            <div className='p-6'>
-              {/* Progress */}
-              <div className='mb-6'>
-                <div className='bg-gray-100 rounded-full w-full h-2'>
-                  <div
-                    className='bg-pink-500 rounded-full h-full'
-                    style={{
-                      width: `${
-                        ((currentQuestion + 1) / questions.length) * 100
-                      }%`,
-                    }}
-                  />
-                </div>
-                <div className='mt-2 text-gray-500 text-sm text-right'>
-                  Question {currentQuestion + 1} of {questions.length}
-                </div>
-              </div>
-
-              {/* Question */}
-              {question && (
-                <div>
-                  <h2 className='mb-6 font-medium text-lg'>
-                    {question.questionText}
-                  </h2>
-
-                  {/* Options */}
-                  <div className='space-y-3 mb-6'>
-                    {question.options.map((option, index) => (
-                      <div
-                        key={index}
-                        className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                          selectedAnswers[question.id] === option
-                            ? "bg-pink-500 border-pink-500 text-white"
-                            : "border-gray-200 hover:border-pink-200 hover:bg-pink-50"
-                        }`}
-                        onClick={() => selectAnswer(question.id, option)}
-                      >
-                        <span>{option}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Points indicator */}
-                  <div className='mb-6 text-gray-500 text-sm'>
-                    Points: {question.points}
-                  </div>
-
-                  {/* Navigation Buttons */}
-                  <div className='flex justify-between'>
+      <div className='relative mx-auto px-4 md:px-6 py-8 md:py-12 max-w-7xl container'>
+        {!quizCompleted ? (
+          // Quiz in progress
+          <div className='gap-8 grid lg:grid-cols-3'>
+            {/* Main Quiz */}
+            <div className='group relative lg:col-span-2'>
+              <div className='absolute -inset-1 bg-gradient-to-r from-pink-300 to-purple-300 opacity-0 group-hover:opacity-25 rounded-2xl transition duration-300 blur'></div>
+              <div className='relative bg-white/80 shadow-lg backdrop-blur-sm border border-pink-100/50 rounded-2xl overflow-hidden'>
+                {/* Header */}
+                <div className='flex justify-between items-center bg-gradient-to-r from-white/50 to-pink-50/50 p-6 border-pink-100/50 border-b'>
+                  <div className='flex items-center gap-3'>
                     <button
-                      className={`px-6 py-2 rounded-full border ${
-                        currentQuestion === 0
-                          ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                          : "border-gray-200 text-gray-700 hover:bg-gray-50"
-                      }`}
-                      onClick={prevQuestion}
-                      disabled={currentQuestion === 0}
+                      onClick={() => router.back()}
+                      className='group bg-gradient-to-r from-pink-100 hover:from-pink-200 to-purple-100 hover:to-purple-200 p-2 rounded-lg transition-all duration-200'
                     >
-                      Previous
+                      <ChevronLeft className='w-5 h-5 text-pink-600 group-hover:scale-110 transition-transform' />
                     </button>
-
-                    {currentQuestion < questions.length - 1 ? (
-                      <button
-                        className='bg-pink-500 hover:bg-pink-600 px-6 py-2 rounded-full text-white transition-colors'
-                        onClick={nextQuestion}
+                    <div>
+                      <h1 className='font-bold text-gray-900 text-xl'>
+                        {quiz.title}
+                      </h1>
+                      <div
+                        className={`inline-flex items-center bg-gradient-to-r ${getSubjectColor(
+                          quiz?.subject
+                        )} px-3 py-1 rounded-full font-medium text-white text-xs shadow-sm`}
                       >
-                        Next
-                      </button>
-                    ) : (
-                      <button
-                        className='bg-green-500 hover:bg-green-600 px-6 py-2 rounded-full text-white transition-colors'
-                        onClick={submitQuiz}
-                      >
-                        Submit
-                      </button>
-                    )}
+                        <Sparkles className='mr-1 w-3 h-3' />
+                        {quiz?.subject}
+                      </div>
+                    </div>
+                  </div>
+                  <div className='flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100 shadow-sm px-4 py-2 border border-blue-200/50 rounded-full'>
+                    <Clock className='w-4 h-4 text-blue-500' />
+                    <span className='font-bold text-blue-700'>
+                      {formatTime(timeLeft)}
+                    </span>
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* Student info and quiz creator info */}
-          <div className='md:col-span-1'>
-            <div className='bg-white shadow-sm p-6 border border-pink-100 rounded-xl'>
-              {/* Instructions */}
-              <div className='bg-pink-50 mb-6 p-4 rounded-lg'>
-                <h2 className='font-bold text-xl'>Instructions</h2>
-                <p className='text-gray-700'>{quiz.instruction}</p>
-              </div>
-
-              {/* Quiz creator info */}
-              <div className='mb-6 p-4 border border-pink-100 rounded-lg'>
-                {/* User info */}
-
-                <h3 className='mb-2 font-bold text-lg'>Quiz Creator</h3>
-                <div className='flex items-center gap-3'>
-                  <div className='relative border-4 border-pink-100 rounded-full w-16 h-16 overflow-hidden'>
-                    {quiz.createdBy?.profilePicture ? (
-                      <Image
-                        src={
-                          quiz.createdBy?.profilePicture ||
-                          "/images/placeholder.png"
-                        }
-                        alt={quiz.createdBy?.name}
-                        fill
-                        className='object-cover'
+                <div className='p-6'>
+                  {/* Progress */}
+                  <div className='mb-6'>
+                    <div className='bg-gradient-to-r from-gray-100 to-gray-200 shadow-inner rounded-full w-full h-3'>
+                      <div
+                        className='bg-gradient-to-r from-pink-500 to-purple-600 shadow-sm rounded-full h-full transition-all duration-500 ease-out'
+                        style={{
+                          width: `${
+                            ((currentQuestion + 1) / questions.length) * 100
+                          }%`,
+                        }}
                       />
-                    ) : (
-                      <div className='flex justify-center items-center bg-pink-50 w-full h-full font-medium text-pink-500 text-xl'>
-                        {getInitials(quiz.createdBy?.name || "")}
-                      </div>
-                    )}
+                    </div>
+                    <div className='flex justify-between items-center mt-2'>
+                      <span className='font-medium text-gray-600 text-sm'>
+                        Question {currentQuestion + 1} of {questions.length}
+                      </span>
+                      <span className='font-bold text-pink-600 text-sm'>
+                        {Math.round(
+                          ((currentQuestion + 1) / questions.length) * 100
+                        )}
+                        % Complete
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <p className='font-medium text-xl'>{quiz.createdBy.name}</p>
-                    <p className='text-gray-500 text-sm'>
-                      {quiz.createdBy.favouriteTopic} • {quiz.createdBy.rank}
+
+                  {/* Question */}
+                  {question && (
+                    <div>
+                      <div className='bg-gradient-to-r from-purple-50 to-pink-50 mb-6 p-6 border border-purple-200/50 rounded-xl'>
+                        <h2 className='font-bold text-gray-900 text-lg md:text-xl leading-relaxed'>
+                          {question.questionText}
+                        </h2>
+                        <div className='flex items-center gap-2 mt-3'>
+                          <Target className='w-4 h-4 text-purple-500' />
+                          <span className='font-medium text-purple-600 text-sm'>
+                            Points: {question.points}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Options */}
+                      <div className='space-y-3 mb-6'>
+                        {question.options.map((option, index) => (
+                          <div
+                            key={index}
+                            className={`group border rounded-xl p-4 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
+                              selectedAnswers[question.id] === option
+                                ? "bg-gradient-to-r from-pink-500 to-purple-600 border-pink-500 text-white shadow-lg"
+                                : "border-gray-200 hover:border-pink-300 hover:bg-gradient-to-r hover:from-pink-50 hover:to-purple-50 bg-white/80 backdrop-blur-sm"
+                            }`}
+                            onClick={() => selectAnswer(question.id, option)}
+                          >
+                            <div className='flex items-center gap-3'>
+                              <div
+                                className={`w-4 h-4 rounded-full border-2 transition-all duration-200 ${
+                                  selectedAnswers[question.id] === option
+                                    ? "border-white bg-white"
+                                    : "border-gray-300 group-hover:border-pink-400"
+                                }`}
+                              >
+                                {selectedAnswers[question.id] === option && (
+                                  <div className='bg-pink-500 rounded-full w-full h-full scale-50 transform'></div>
+                                )}
+                              </div>
+                              <span className='flex-1 font-medium'>
+                                {option}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Navigation Buttons */}
+                      <div className='flex justify-between gap-4'>
+                        <button
+                          className={`group inline-flex items-center px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+                            currentQuestion === 0
+                              ? "border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50"
+                              : "border-gray-200 text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 hover:border-gray-300 bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transform hover:scale-105"
+                          }`}
+                          onClick={prevQuestion}
+                          disabled={currentQuestion === 0}
+                        >
+                          <ChevronLeft className='mr-2 w-4 h-4' />
+                          Previous
+                        </button>
+
+                        {currentQuestion < questions.length - 1 ? (
+                          <button
+                            className='group inline-flex items-center bg-gradient-to-r from-pink-500 hover:from-pink-600 to-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl px-6 py-3 rounded-xl overflow-hidden font-medium text-white hover:scale-105 transition-all duration-300 transform'
+                            onClick={nextQuestion}
+                          >
+                            Next
+                            <ChevronRight className='ml-2 w-4 h-4 transition-transform group-hover:translate-x-1' />
+                          </button>
+                        ) : (
+                          <button
+                            className='group inline-flex items-center bg-gradient-to-r from-green-500 hover:from-green-600 to-emerald-600 hover:to-emerald-700 shadow-lg hover:shadow-xl px-6 py-3 rounded-xl overflow-hidden font-medium text-white hover:scale-105 transition-all duration-300 transform'
+                            onClick={submitQuiz}
+                          >
+                            <CheckCircle className='mr-2 w-4 h-4' />
+                            Submit Quiz
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Sidebar */}
+            <div className='space-y-6 lg:col-span-1'>
+              {/* Instructions */}
+              {quiz?.instruction && (
+                <div className='group relative'>
+                  <div className='absolute -inset-1 bg-gradient-to-r from-blue-300 to-blue-400 opacity-0 group-hover:opacity-20 rounded-2xl transition duration-300 blur'></div>
+                  <div className='relative bg-white/80 shadow-lg backdrop-blur-sm p-6 border border-blue-100/50 rounded-2xl'>
+                    <div className='flex items-center mb-4'>
+                      <div className='bg-gradient-to-r from-blue-100 to-blue-200 mr-3 p-3 rounded-xl'>
+                        <BookOpen className='w-5 h-5 text-blue-600' />
+                      </div>
+                      <h2 className='font-bold text-gray-900 text-xl'>
+                        Instructions
+                      </h2>
+                    </div>
+                    <p className='text-gray-700 leading-relaxed'>
+                      {quiz?.instruction}
                     </p>
                   </div>
                 </div>
+              )}
+
+              {/* Quiz Info */}
+              <div className='group relative'>
+                <div className='absolute -inset-1 bg-gradient-to-r from-purple-300 to-pink-300 opacity-0 group-hover:opacity-20 rounded-2xl transition duration-300 blur'></div>
+                <div className='relative bg-white/80 shadow-lg backdrop-blur-sm p-6 border border-purple-100/50 rounded-2xl'>
+                  <h3 className='flex items-center mb-4 font-bold text-gray-900 text-xl'>
+                    <div className='bg-gradient-to-r from-purple-100 to-purple-200 mr-3 p-3 rounded-xl'>
+                      <Target className='w-5 h-5 text-purple-600' />
+                    </div>
+                    Quiz Details
+                  </h3>
+
+                  <div className='space-y-4'>
+                    <div className='flex items-center bg-gradient-to-r from-pink-50 to-purple-50 p-3 border border-pink-200/50 rounded-xl'>
+                      <span className='font-medium text-gray-600 text-sm'>
+                        Topic:
+                      </span>
+                      <span className='ml-2 font-semibold text-gray-900'>
+                        {quiz?.topic}
+                      </span>
+                    </div>
+
+                    <div className='flex items-center bg-gradient-to-r from-purple-50 to-blue-50 p-3 border border-purple-200/50 rounded-xl'>
+                      <span className='font-medium text-gray-600 text-sm'>
+                        Questions:
+                      </span>
+                      <span className='ml-2 font-semibold text-gray-900'>
+                        {quiz?.questions.length} Questions
+                      </span>
+                    </div>
+
+                    <div className='bg-gradient-to-r from-amber-50 to-yellow-50 p-4 border border-amber-200/50 rounded-xl'>
+                      <div className='flex items-center'>
+                        <Award className='mr-2 w-5 h-5 text-amber-600' />
+                        <div>
+                          <p className='font-medium text-amber-600 text-sm'>
+                            XP Reward
+                          </p>
+                          <p className='font-bold text-amber-800'>
+                            {quiz?.xpReward} XP
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quiz Creator */}
+              <div className='group relative'>
+                <div className='absolute -inset-1 bg-gradient-to-r from-emerald-300 to-emerald-400 opacity-0 group-hover:opacity-20 rounded-2xl transition duration-300 blur'></div>
+                <div className='relative bg-white/80 shadow-lg backdrop-blur-sm p-6 border border-emerald-100/50 rounded-2xl'>
+                  <div className='flex items-center mb-4'>
+                    <div className='bg-gradient-to-r from-emerald-100 to-emerald-200 mr-3 p-3 rounded-xl'>
+                      <User className='w-5 h-5 text-emerald-600' />
+                    </div>
+                    <h3 className='font-bold text-gray-900 text-xl'>
+                      Quiz Creator
+                    </h3>
+                  </div>
+
+                  <div className='flex items-center gap-4'>
+                    <div className='relative'>
+                      <div className='absolute -inset-1 bg-gradient-to-r from-emerald-400 to-emerald-500 opacity-20 rounded-full blur'></div>
+                      <div className='relative shadow-lg border-4 border-white rounded-full w-16 h-16 overflow-hidden'>
+                        {quiz?.createdBy?.profilePicture ? (
+                          <Image
+                            src={
+                              quiz?.createdBy?.profilePicture ||
+                              "/images/placeholder.png"
+                            }
+                            alt={quiz?.createdBy?.name}
+                            fill
+                            className='object-cover'
+                          />
+                        ) : (
+                          <div className='flex justify-center items-center bg-gradient-to-br from-emerald-100 to-emerald-200 w-full h-full font-bold text-emerald-700 text-lg'>
+                            {getInitials(quiz?.createdBy?.name || "")}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <p className='font-bold text-gray-900 text-lg'>
+                        {quiz?.createdBy.name}
+                      </p>
+                      <p className='font-medium text-emerald-600 text-sm'>
+                        {quiz?.createdBy.favouriteTopic}
+                      </p>
+                      <div className='flex items-center mt-1'>
+                        <Sparkles className='mr-1 w-3 h-3 text-amber-500' />
+                        <span className='font-medium text-amber-600 text-sm'>
+                          {quiz?.createdBy.rank}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      ) : (
-        // Quiz completed - show results
-        <div className='bg-white shadow-md border border-pink-100 rounded-xl overflow-hidden'>
-          <div className='p-8 text-center'>
-            <h2 className='mb-4 font-bold text-2xl'>Quiz Completed!</h2>
-            <div className='mb-6 font-bold text-pink-500 text-6xl'>
-              {score}%
-            </div>
+        ) : (
+          // Quiz completed - show results
+          <div className='group relative mx-auto max-w-4xl'>
+            <div className='absolute -inset-1 bg-gradient-to-r from-pink-300 to-purple-300 opacity-25 rounded-3xl transition duration-300 blur'></div>
+            <div className='relative bg-white/90 shadow-2xl backdrop-blur-sm border border-pink-100/50 rounded-3xl overflow-hidden'>
+              <div className='bg-gradient-to-r from-pink-50/50 to-purple-50/50 p-8 md:p-12 text-center'>
+                <div className='bg-gradient-to-r from-pink-100 to-purple-100 mx-auto mb-6 p-4 rounded-full w-20 h-20'>
+                  {score >= quiz.passingScore ? (
+                    <CheckCircle className='mx-auto w-12 h-12 text-green-500' />
+                  ) : (
+                    <XCircle className='mx-auto w-12 h-12 text-red-500' />
+                  )}
+                </div>
 
-            {score >= quiz.passingScore ? (
-              <div className='bg-green-50 mb-6 p-4 border border-green-200 rounded-lg'>
-                <div className='flex justify-center items-center gap-2'>
-                  <CheckCircle className='w-5 h-5 text-green-500' />
-                  <p className='font-medium text-green-700'>
-                    Congratulations! You passed the quiz and earned{" "}
-                    {quiz.xpReward} XP.
-                  </p>
+                <h2 className='mb-4 font-bold text-gray-900 text-3xl'>
+                  Quiz Completed!
+                </h2>
+
+                <div className='bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600 mb-6 font-bold text-transparent text-6xl md:text-7xl'>
+                  {score}%
+                </div>
+
+                {score >= quiz.passingScore ? (
+                  <div className='bg-gradient-to-r from-green-50 to-emerald-50 mb-6 p-6 border border-green-200/50 rounded-2xl'>
+                    <div className='flex justify-center items-center gap-3 mb-2'>
+                      <CheckCircle className='w-6 h-6 text-green-500' />
+                      <p className='font-bold text-green-700 text-lg'>
+                        Congratulations! 🎉
+                      </p>
+                    </div>
+                    <p className='font-medium text-green-600'>
+                      You passed the quiz and earned {quiz.xpReward} XP!
+                    </p>
+                  </div>
+                ) : (
+                  <div className='bg-gradient-to-r from-red-50 to-rose-50 mb-6 p-6 border border-red-200/50 rounded-2xl'>
+                    <div className='flex justify-center items-center gap-3 mb-2'>
+                      <XCircle className='w-6 h-6 text-red-500' />
+                      <p className='font-bold text-red-700 text-lg'>
+                        Keep Trying! 💪
+                      </p>
+                    </div>
+                    <p className='font-medium text-red-600'>
+                      You didn&apos;t reach the passing score of{" "}
+                      {quiz.passingScore}%. Don&apos;t give up!
+                    </p>
+                  </div>
+                )}
+
+                <p className='mb-8 font-medium text-gray-600 text-lg'>
+                  You scored {totalScore} out of {quiz.maxScore} points.
+                </p>
+
+                <div className='flex sm:flex-row flex-col justify-center gap-4 mb-4'>
+                  <Link
+                    href={`/quiz-result/${quiz.code}`}
+                    className='group inline-flex justify-center items-center bg-gradient-to-r from-pink-500 hover:from-pink-600 to-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl px-8 py-4 rounded-xl overflow-hidden font-medium text-white hover:scale-105 transition-all duration-300 transform'
+                  >
+                    <div className='absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transition-transform translate-x-[-100%] group-hover:translate-x-[100%] duration-700'></div>
+                    <Award className='mr-2 w-5 h-5' />
+                    View Detailed Results
+                  </Link>
+
+                  <button
+                    className='group inline-flex justify-center items-center bg-white/80 hover:bg-white hover:shadow-lg backdrop-blur-sm px-8 py-4 border border-pink-200 hover:border-pink-300 rounded-xl overflow-hidden font-medium text-pink-600 transition-all duration-300'
+                    onClick={() => {
+                      setCurrentQuestion(0);
+                      setSelectedAnswers({});
+                      setTimeLeft(durationToSeconds(quiz.duration));
+                      setQuizCompleted(false);
+                    }}
+                  >
+                    <Clock className='mr-2 w-5 h-5' />
+                    Retake Quiz
+                  </button>
+                </div>
+
+                <div className='flex justify-center'>
+                  <Link
+                    href='/quizzes'
+                    className='group inline-flex items-center font-medium text-pink-600 hover:text-pink-700 transition-all duration-200'
+                  >
+                    <div className='bg-gradient-to-r from-pink-100 to-purple-100 mr-2 p-2 rounded-lg group-hover:scale-105 transition-transform duration-200'>
+                      <ChevronLeft className='w-4 h-4' />
+                    </div>
+                    Back to All Quizzes
+                  </Link>
                 </div>
               </div>
-            ) : (
-              <div className='bg-red-50 mb-6 p-4 border border-red-200 rounded-lg'>
-                <div className='flex justify-center items-center gap-2'>
-                  <XCircle className='w-5 h-5 text-red-500' />
-                  <p className='font-medium text-red-700'>
-                    You didn&#39;t reach the passing score of{" "}
-                    {quiz.passingScore}%. Try again!
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <p className='mb-8 text-lg'>
-              You scored {totalScore} out of {quiz.maxScore} points.
-            </p>
-
-            <div className='flex sm:flex-row flex-col justify-center gap-4'>
-              <Link
-                href={`/quiz-result/${quiz.code}`}
-                className='inline-flex justify-center items-center bg-pink-500 hover:bg-pink-600 px-6 py-3 rounded-full font-medium text-white transition-colors'
-              >
-                View Result
-              </Link>
-
-              <button
-                className='inline-flex justify-center items-center bg-white hover:bg-pink-50 px-6 py-3 border border-pink-200 rounded-full font-medium text-pink-500 transition-colors'
-                onClick={() => {
-                  setCurrentQuestion(0);
-                  setSelectedAnswers({});
-                  setTimeLeft(durationToSeconds(quiz.duration));
-                  setQuizCompleted(false);
-                }}
-              >
-                Retake Quiz
-              </button>
-            </div>
-
-            <div className='flex sm:flex-row flex-col justify-center gap-4 mt-4'>
-              <Link
-                href='/quizzes'
-                className='inline-flex justify-center items-center bg-pink-500 hover:bg-pink-600 px-6 py-3 rounded-full font-medium text-white transition-colors'
-              >
-                Back to Quizzes
-              </Link>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

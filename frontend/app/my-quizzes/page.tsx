@@ -14,6 +14,12 @@ import {
   Award,
   Lock,
   Globe,
+  Calendar,
+  Hash,
+  Sparkles,
+  // Zap,
+  Star,
+  BarChart3,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import ConfirmationModal from "../components/confirmation-modal";
@@ -26,7 +32,6 @@ interface User {
   rank: string;
   level: number;
   xp: number;
-  // quizResults: any[]; // Replace with a proper type if needed
   createdAt: string;
   updatedAt: string;
   __v: number;
@@ -92,14 +97,11 @@ export default function MyQuizzesPage() {
   };
 
   const toggleQuizVisibility = async (id: string) => {
-    // Find the quiz to update
     const quizToToggle = quizzes.find((quiz) => quiz._id === id);
     if (!quizToToggle) return;
 
-    // Determine the new visibility
     const newVisibility = !quizToToggle.isPublic;
 
-    // Optimistically update the UI
     setQuizzes(
       quizzes.map((quiz) =>
         quiz._id === id ? { ...quiz, isPublic: newVisibility } : quiz
@@ -117,7 +119,6 @@ export default function MyQuizzesPage() {
         throw new Error("Failed to update visibility");
       }
     } catch (error) {
-      // Revert the UI update if the API call fails
       setQuizzes(
         quizzes.map((quiz) =>
           quiz._id === id ? { ...quiz, isPublic: !newVisibility } : quiz
@@ -127,21 +128,17 @@ export default function MyQuizzesPage() {
     }
   };
 
-  // Function to open the delete confirmation modal
   const openDeleteModal = (id: string) => {
     setQuizToDelete(id);
     setDeleteModalOpen(true);
   };
 
-  // Delete quiz function (called when user confirms in the modal)
   const deleteQuiz = async () => {
     if (!quizToDelete) return;
 
-    // Save the current state to revert in case of an error
     const originalQuizzes = [...quizzes];
     setIsDeleting(true);
 
-    // Optimistically update the UI
     setQuizzes(quizzes.filter((quiz) => quiz._id !== quizToDelete));
 
     try {
@@ -153,7 +150,6 @@ export default function MyQuizzesPage() {
         throw new Error("Failed to delete quiz");
       }
     } catch (error) {
-      // If deletion fails, revert the UI update
       setQuizzes(originalQuizzes);
       console.error("Error deleting quiz:", error);
     } finally {
@@ -163,7 +159,6 @@ export default function MyQuizzesPage() {
     }
   };
 
-  // Format date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -173,185 +168,345 @@ export default function MyQuizzesPage() {
     });
   };
 
+  // Get subject color based on subject name
+  const getSubjectColor = (subject: string) => {
+    const colors = {
+      Mathematics: "from-blue-500 to-blue-600",
+      Science: "from-green-500 to-green-600",
+      English: "from-purple-500 to-purple-600",
+      History: "from-amber-500 to-amber-600",
+      Geography: "from-emerald-500 to-emerald-600",
+      Technology: "from-indigo-500 to-indigo-600",
+      "Computer Science": "from-cyan-500 to-cyan-600",
+      "Network Technology": "from-violet-500 to-violet-600",
+    };
+    return (
+      colors[subject as keyof typeof colors] || "from-pink-500 to-pink-600"
+    );
+  };
+
+  // Calculate stats
+  const totalQuizzes = quizzes.length;
+  const publicQuizzes = quizzes.filter((quiz) => quiz.isPublic).length;
+  const totalQuestions = quizzes.reduce(
+    (sum, quiz) => sum + quiz.questions.length,
+    0
+  );
+
   return (
-    <div className='mx-auto px-4 md:px-6 py-8 md:py-12 max-w-6xl container'>
-      <div className='flex md:flex-row flex-col justify-between items-start md:items-center mb-8'>
-        <div>
-          <h1 className='mb-2 font-bold text-3xl'>My Quizzes</h1>
-          <p className='text-gray-500'>
-            Manage the quizzes you&apos;ve created and share them with others.
-          </p>
-        </div>
-        <Link
-          href='/create-quiz'
-          className='inline-flex justify-center items-center bg-pink-500 hover:bg-pink-600 mt-4 md:mt-0 px-4 py-2 rounded-full font-medium text-white transition-colors'
-        >
-          <Plus className='mr-1 w-4 h-4' /> Create New Quiz
-        </Link>
+    <div className='bg-gradient-to-br from-slate-50 via-white to-pink-50/30 min-h-screen'>
+      {/* Background Pattern */}
+      <div className='absolute inset-0 opacity-5 pointer-events-none'>
+        <div
+          className='top-0 left-0 absolute w-full h-full'
+          style={{
+            backgroundImage: `radial-gradient(circle at 25% 25%, #ec4899 1px, transparent 1px)`,
+            backgroundSize: "40px 40px",
+          }}
+        ></div>
       </div>
 
-      {quizzes.length === 0 ? (
-        <div className='bg-pink-50 py-12 rounded-xl text-center'>
-          <div className='inline-flex justify-center items-center bg-pink-100 mb-4 rounded-full w-12 h-12'>
-            <Plus className='w-6 h-6 text-pink-500' />
+      <div className='relative mx-auto px-4 md:px-6 py-8 md:py-12 max-w-6xl container'>
+        {/* Enhanced Header */}
+        <div className='flex md:flex-row flex-col justify-between items-start md:items-center mb-12'>
+          <div className='space-y-4'>
+            <div className='inline-flex items-center bg-gradient-to-r from-pink-100 to-purple-100 px-4 py-2 border border-pink-200/50 rounded-full font-medium text-pink-600 text-sm'>
+              <Star className='mr-2 w-4 h-4' />
+              Creator Dashboard
+            </div>
+            <h1 className='bg-clip-text bg-gradient-to-r from-gray-900 to-gray-700 font-bold text-transparent text-4xl md:text-5xl tracking-tight'>
+              My Quizzes
+            </h1>
+            <p className='max-w-2xl text-gray-600 text-lg leading-relaxed'>
+              Manage your quiz creations, track engagement, and share your
+              knowledge with the world.
+            </p>
           </div>
-          <h3 className='mb-2 font-semibold text-xl'>No quizzes yet</h3>
-          <p className='mb-4 text-gray-500'>
-            You haven&#39;t created any quizzes yet. Create your first quiz to
-            get started!
-          </p>
           <Link
             href='/create-quiz'
-            className='inline-flex justify-center items-center bg-pink-500 hover:bg-pink-600 px-4 py-2 rounded-full font-medium text-white transition-colors'
+            className='group inline-flex relative justify-center items-center bg-gradient-to-r from-pink-500 hover:from-pink-600 to-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl mt-6 md:mt-0 px-6 py-3 rounded-full overflow-hidden font-semibold text-white hover:scale-105 transition-all duration-300 transform'
           >
-            <Plus className='mr-1 w-4 h-4' /> Create Quiz
+            <div className='absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transition-transform translate-x-[-100%] group-hover:translate-x-[100%] duration-700'></div>
+            <Plus className='mr-2 w-4 h-4' />
+            Create New Quiz
           </Link>
         </div>
-      ) : (
-        <div className='space-y-6'>
-          {quizzes.map((quiz) => (
-            <div
-              key={quiz._id}
-              className='bg-white shadow-sm hover:shadow-md border border-pink-100 rounded-xl overflow-hidden transition-all'
-            >
-              <div className='p-6'>
-                <div className='flex md:flex-row flex-col justify-between md:items-center mb-4'>
+
+        {/* Stats Cards */}
+        {quizzes.length > 0 && (
+          <div className='gap-6 grid grid-cols-1 md:grid-cols-3 mb-12'>
+            <div className='group relative'>
+              <div className='absolute -inset-1 bg-gradient-to-r from-blue-300 to-blue-400 opacity-20 group-hover:opacity-30 rounded-2xl transition duration-300 blur'></div>
+              <div className='relative bg-white/80 shadow-lg backdrop-blur-sm p-6 border border-blue-200/50 rounded-2xl'>
+                <div className='flex justify-between items-center'>
                   <div>
-                    <div className='flex items-center gap-2 mb-2'>
-                      <span className='inline-block bg-pink-100 px-3 py-1 rounded-full font-medium text-pink-600 text-xs'>
-                        {quiz.subject}
-                      </span>
-                      <span className='text-gray-500 text-xs'>
-                        Created on {formatDate(quiz.createdAt)}
-                      </span>
-                      {quiz.isPublic ? (
-                        <span className='inline-flex items-center font-medium text-green-600 text-xs'>
-                          <Globe className='mr-1 w-3 h-3' /> Public
-                        </span>
-                      ) : (
-                        <span className='inline-flex items-center font-medium text-orange-600 text-xs'>
-                          <Lock className='mr-1 w-3 h-3' /> Private
-                        </span>
-                      )}
-                    </div>
-                    <h3 className='mb-2 font-semibold text-xl'>{quiz.title}</h3>
-                    <div className='flex flex-wrap gap-4 text-gray-500 text-sm'>
-                      <div className='flex items-center'>
-                        <Brain className='mr-1 w-4 h-4' /> {quiz.topic}
-                      </div>
-                      <div className='flex items-center'>
-                        <Clock className='mr-1 w-4 h-4' /> {quiz.duration}
-                      </div>
-                      <div className='flex items-center'>
-                        <Award className='mr-1 w-4 h-4 text-pink-500' />{" "}
-                        {quiz.xpReward} XP
-                      </div>
-                      <div>{quiz.questions.length} questions</div>
-                    </div>
+                    <p className='mb-1 font-medium text-blue-600 text-sm'>
+                      Total Quizzes
+                    </p>
+                    <p className='font-bold text-gray-900 text-2xl'>
+                      {totalQuizzes}
+                    </p>
                   </div>
-                </div>
-
-                <div className='flex justify-between items-center mb-4'>
-                  <div className='flex items-center'>
-                    <span className='mr-2 text-gray-500 text-xs'>
-                      Quiz Code:
-                    </span>
-                    <span className='bg-pink-50 px-2 py-1 rounded-md font-medium text-pink-600 text-xs'>
-                      {quiz.code}
-                    </span>
+                  <div className='bg-gradient-to-r from-blue-100 to-blue-200 p-3 rounded-xl'>
+                    <BarChart3 className='w-6 h-6 text-blue-600' />
                   </div>
-                  <button
-                    onClick={() => copyCodeToClipboard(quiz.code)}
-                    className='p-1 text-gray-400 hover:text-pink-500 transition-colors'
-                    title='Copy quiz code'
-                  >
-                    {copiedCode === quiz.code ? (
-                      <span className='text-green-500 text-xs'>Copied!</span>
-                    ) : (
-                      <Copy className='w-4 h-4' />
-                    )}
-                  </button>
-                </div>
-
-                <div className='flex flex-wrap gap-2'>
-                  <Link
-                    href={`/quiz-details/${quiz.code}`}
-                    className='inline-flex justify-center items-center bg-pink-500 hover:bg-pink-600 px-4 py-2 rounded-full font-medium text-white transition-colors'
-                  >
-                    <Eye className='mr-1 w-4 h-4' /> See Quiz
-                  </Link>
-                  <Link
-                    href={`/edit-quiz/${quiz._id}`}
-                    className='inline-flex justify-center items-center bg-white hover:bg-gray-50 px-4 py-2 border border-gray-200 rounded-full font-medium text-gray-700 transition-colors'
-                  >
-                    <Edit className='mr-1 w-4 h-4' /> Edit
-                  </Link>
-                  <button
-                    onClick={() => toggleQuizVisibility(quiz._id)}
-                    className='inline-flex justify-center items-center bg-white hover:bg-gray-50 px-4 py-2 border border-gray-200 rounded-full font-medium text-gray-700 transition-colors'
-                  >
-                    {quiz.isPublic ? (
-                      <>
-                        <Lock className='mr-1 w-4 h-4' /> Make Private
-                      </>
-                    ) : (
-                      <>
-                        <Globe className='mr-1 w-4 h-4' /> Make Public
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => {
-                      const shareUrl = `${window.location.origin}/quiz-details/${quiz.code}`;
-                      if (navigator.share) {
-                        navigator.share({
-                          title: quiz.title,
-                          text: `Try my quiz: ${quiz.title}`,
-                          url: shareUrl,
-                        });
-                      } else {
-                        navigator.clipboard.writeText(shareUrl);
-                        setCopiedCode(`share-${quiz.code}`);
-                        setTimeout(() => setCopiedCode(""), 2000);
-                      }
-                    }}
-                    className='inline-flex justify-center items-center bg-white hover:bg-pink-50 px-4 py-2 border border-pink-200 rounded-full font-medium text-pink-500 transition-colors'
-                  >
-                    {copiedCode === `share-${quiz.code}` ? (
-                      <span className='text-green-500 text-xs'>
-                        Link Copied!
-                      </span>
-                    ) : (
-                      <>
-                        <Share2 className='mr-1 w-4 h-4' /> Share
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => openDeleteModal(quiz._id)}
-                    className='inline-flex justify-center items-center bg-white hover:bg-red-50 px-4 py-2 border border-red-200 rounded-full font-medium text-red-500 transition-colors'
-                  >
-                    <Trash2 className='mr-1 w-4 h-4' /> Delete
-                  </button>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      )}
 
-      {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        onConfirm={deleteQuiz}
-        title='Delete Quiz'
-        description='Are you sure you want to delete this quiz? This action cannot be undone and all quiz data will be permanently lost.'
-        confirmText='Delete Quiz'
-        cancelText='Cancel'
-        type='delete'
-        isLoading={isDeleting}
-      />
+            <div className='group relative'>
+              <div className='absolute -inset-1 bg-gradient-to-r from-green-300 to-green-400 opacity-20 group-hover:opacity-30 rounded-2xl transition duration-300 blur'></div>
+              <div className='relative bg-white/80 shadow-lg backdrop-blur-sm p-6 border border-green-200/50 rounded-2xl'>
+                <div className='flex justify-between items-center'>
+                  <div>
+                    <p className='mb-1 font-medium text-green-600 text-sm'>
+                      Public Quizzes
+                    </p>
+                    <p className='font-bold text-gray-900 text-2xl'>
+                      {publicQuizzes}
+                    </p>
+                  </div>
+                  <div className='bg-gradient-to-r from-green-100 to-green-200 p-3 rounded-xl'>
+                    <Globe className='w-6 h-6 text-green-600' />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className='group relative'>
+              <div className='absolute -inset-1 bg-gradient-to-r from-purple-300 to-purple-400 opacity-20 group-hover:opacity-30 rounded-2xl transition duration-300 blur'></div>
+              <div className='relative bg-white/80 shadow-lg backdrop-blur-sm p-6 border border-purple-200/50 rounded-2xl'>
+                <div className='flex justify-between items-center'>
+                  <div>
+                    <p className='mb-1 font-medium text-purple-600 text-sm'>
+                      Total Questions
+                    </p>
+                    <p className='font-bold text-gray-900 text-2xl'>
+                      {totalQuestions}
+                    </p>
+                  </div>
+                  <div className='bg-gradient-to-r from-purple-100 to-purple-200 p-3 rounded-xl'>
+                    <Brain className='w-6 h-6 text-purple-600' />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Quiz List */}
+        {quizzes.length === 0 ? (
+          <div className='group relative'>
+            <div className='absolute -inset-1 bg-gradient-to-r from-pink-300 to-purple-300 opacity-20 rounded-3xl blur'></div>
+            <div className='relative bg-white/70 shadow-xl backdrop-blur-sm py-16 border border-pink-200/50 rounded-3xl text-center'>
+              <div className='inline-flex justify-center items-center bg-gradient-to-r from-pink-100 to-purple-100 mb-6 rounded-2xl w-16 h-16'>
+                <Plus className='w-8 h-8 text-pink-500' />
+              </div>
+              <h3 className='mb-3 font-bold text-gray-900 text-2xl'>
+                No quizzes yet
+              </h3>
+              <p className='mx-auto mb-6 max-w-md text-gray-600 text-lg'>
+                You haven&apos;t created any quizzes yet. Start building your
+                first quiz to share your knowledge with others!
+              </p>
+              <Link
+                href='/create-quiz'
+                className='group inline-flex justify-center items-center bg-gradient-to-r from-pink-500 hover:from-pink-600 to-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl px-6 py-3 rounded-full font-semibold text-white hover:scale-105 transition-all duration-300 transform'
+              >
+                <Sparkles className='mr-2 w-4 h-4 group-hover:rotate-12 transition-transform' />
+                Create Your First Quiz
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className='space-y-8'>
+            {quizzes.map((quiz, index) => (
+              <div
+                key={quiz._id}
+                className='group relative animate-in duration-500 fade-in-0'
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className='absolute -inset-1 bg-gradient-to-r from-pink-300 to-purple-300 opacity-0 group-hover:opacity-25 rounded-2xl transition duration-500 blur'></div>
+                <div className='relative bg-white/80 shadow-lg hover:shadow-2xl backdrop-blur-sm border border-pink-100/50 rounded-2xl overflow-hidden transition-all duration-500'>
+                  <div className='p-8'>
+                    {/* Header Section */}
+                    <div className='flex md:flex-row flex-col justify-between md:items-start mb-6'>
+                      <div className='flex-1 space-y-4'>
+                        {/* Badges Row */}
+                        <div className='flex flex-wrap items-center gap-3'>
+                          <div
+                            className={`inline-flex items-center bg-gradient-to-r ${getSubjectColor(
+                              quiz.subject
+                            )} px-3 py-1 rounded-full font-medium text-white text-sm shadow-lg`}
+                          >
+                            <Sparkles className='mr-1 w-3 h-3' />
+                            {quiz.subject}
+                          </div>
+                          <div className='flex items-center bg-gray-100/80 px-3 py-1 rounded-full text-gray-600 text-sm'>
+                            <Calendar className='mr-1 w-3 h-3' />
+                            {formatDate(quiz.createdAt)}
+                          </div>
+                          {quiz.isPublic ? (
+                            <div className='inline-flex items-center bg-gradient-to-r from-green-100 to-green-200 px-3 py-1 border border-green-300/50 rounded-full font-medium text-green-700 text-sm'>
+                              <Globe className='mr-1 w-3 h-3' />
+                              Public
+                            </div>
+                          ) : (
+                            <div className='inline-flex items-center bg-gradient-to-r from-orange-100 to-orange-200 px-3 py-1 border border-orange-300/50 rounded-full font-medium text-orange-700 text-sm'>
+                              <Lock className='mr-1 w-3 h-3' />
+                              Private
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Title */}
+                        <h3 className='font-bold text-gray-900 group-hover:text-pink-600 text-2xl transition-colors'>
+                          {quiz.title}
+                        </h3>
+
+                        {/* Meta Information */}
+                        <div className='gap-4 grid grid-cols-2 md:grid-cols-4'>
+                          <div className='flex items-center text-gray-600'>
+                            <Brain className='mr-2 w-4 h-4 text-pink-500' />
+                            <span className='text-sm'>{quiz.topic}</span>
+                          </div>
+                          <div className='flex items-center text-gray-600'>
+                            <Clock className='mr-2 w-4 h-4 text-blue-500' />
+                            <span className='text-sm'>{quiz.duration}</span>
+                          </div>
+                          <div className='flex items-center text-gray-600'>
+                            <Award className='mr-2 w-4 h-4 text-amber-500' />
+                            <span className='text-sm'>{quiz.xpReward} XP</span>
+                          </div>
+                          <div className='flex items-center text-gray-600'>
+                            <BarChart3 className='mr-2 w-4 h-4 text-purple-500' />
+                            <span className='text-sm'>
+                              {quiz.questions.length} questions
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quiz Code Section */}
+                    <div className='flex justify-between items-center bg-gradient-to-r from-pink-50 to-purple-50 mb-6 p-4 border border-pink-200/50 rounded-xl'>
+                      <div className='flex items-center'>
+                        <Hash className='mr-2 w-5 h-5 text-pink-500' />
+                        <span className='mr-3 text-gray-600 text-sm'>
+                          Quiz Code:
+                        </span>
+                        <span className='bg-white/80 shadow-sm px-4 py-2 border border-pink-200 rounded-lg font-mono font-bold text-pink-600'>
+                          {quiz.code}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => copyCodeToClipboard(quiz.code)}
+                        className='hover:bg-pink-100 p-2 rounded-lg text-pink-400 hover:text-pink-600 transition-all duration-200'
+                        title='Copy quiz code'
+                      >
+                        {copiedCode === quiz.code ? (
+                          <span className='font-semibold text-green-500 text-sm'>
+                            Copied!
+                          </span>
+                        ) : (
+                          <Copy className='w-4 h-4' />
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className='flex flex-wrap gap-3'>
+                      <Link
+                        href={`/quiz-details/${quiz.code}`}
+                        className='group inline-flex relative justify-center items-center bg-gradient-to-r from-pink-500 hover:from-pink-600 to-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl px-6 py-3 rounded-xl overflow-hidden font-semibold text-white transition-all duration-300'
+                      >
+                        <div className='absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transition-transform translate-x-[-100%] group-hover:translate-x-[100%] duration-700'></div>
+                        <Eye className='mr-2 w-4 h-4' />
+                        View Quiz
+                      </Link>
+
+                      <Link
+                        href={`/edit-quiz/${quiz._id}`}
+                        className='inline-flex justify-center items-center bg-white/80 hover:bg-white hover:shadow-lg backdrop-blur-sm px-6 py-3 border border-gray-300 hover:border-gray-400 rounded-xl font-semibold text-gray-700 transition-all duration-300'
+                      >
+                        <Edit className='mr-2 w-4 h-4' />
+                        Edit
+                      </Link>
+
+                      <button
+                        onClick={() => toggleQuizVisibility(quiz._id)}
+                        className='inline-flex justify-center items-center bg-white/80 hover:bg-white hover:shadow-lg backdrop-blur-sm px-6 py-3 border border-blue-300 hover:border-blue-400 rounded-xl font-semibold text-blue-600 transition-all duration-300'
+                      >
+                        {quiz.isPublic ? (
+                          <>
+                            <Lock className='mr-2 w-4 h-4' />
+                            Make Private
+                          </>
+                        ) : (
+                          <>
+                            <Globe className='mr-2 w-4 h-4' />
+                            Make Public
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const shareUrl = `${window.location.origin}/quiz-details/${quiz.code}`;
+                          if (navigator.share) {
+                            navigator.share({
+                              title: quiz.title,
+                              text: `Try my quiz: ${quiz.title}`,
+                              url: shareUrl,
+                            });
+                          } else {
+                            navigator.clipboard.writeText(shareUrl);
+                            setCopiedCode(`share-${quiz.code}`);
+                            setTimeout(() => setCopiedCode(""), 2000);
+                          }
+                        }}
+                        className='inline-flex justify-center items-center bg-white/80 hover:bg-white hover:shadow-lg backdrop-blur-sm px-6 py-3 border border-green-300 hover:border-green-400 rounded-xl font-semibold text-green-600 transition-all duration-300'
+                      >
+                        {copiedCode === `share-${quiz.code}` ? (
+                          <span className='font-semibold text-green-500 text-sm'>
+                            Link Copied!
+                          </span>
+                        ) : (
+                          <>
+                            <Share2 className='mr-2 w-4 h-4' />
+                            Share
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => openDeleteModal(quiz._id)}
+                        className='inline-flex justify-center items-center bg-white/80 hover:bg-red-50 hover:shadow-lg backdrop-blur-sm px-6 py-3 border border-red-300 hover:border-red-400 rounded-xl font-semibold text-red-600 transition-all duration-300'
+                      >
+                        <Trash2 className='mr-2 w-4 h-4' />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={deleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          onConfirm={deleteQuiz}
+          title='Delete Quiz'
+          description='Are you sure you want to delete this quiz? This action cannot be undone and all quiz data will be permanently lost.'
+          confirmText='Delete Quiz'
+          cancelText='Cancel'
+          type='delete'
+          isLoading={isDeleting}
+        />
+      </div>
     </div>
   );
 }
